@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -11,7 +10,7 @@ datasource db {
 model User {
   id            Int       @id @default(autoincrement())
   regNo         String    @unique
-  passwordHash  String
+  password      String
   role          Role // @default(STUDENT)
   walletAddress String?   @unique
   createdAt     DateTime  @default(now())
