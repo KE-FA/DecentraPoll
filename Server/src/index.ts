@@ -28,7 +28,7 @@ app.get("/", (_req, res) => {
 //Routes
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
-app.use("/api/trade", walletRouter);
+app.use("/api/wallet", walletRouter);
 
 
 
