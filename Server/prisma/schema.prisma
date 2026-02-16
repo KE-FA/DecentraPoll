@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client"
+  
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  regNo         String    @unique
+  passwordHash  String
+  role          Role // @default(STUDENT)
+  walletAddress String?   @unique
+  createdAt     DateTime  @default(now())
+  lastLoginAt   DateTime?
+  logins        Login[]
+
+  @@map("users")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+model Login {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  timestamp DateTime @default(now())
+
+  @@map("login")
+}
