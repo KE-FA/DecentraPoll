@@ -249,7 +249,7 @@ const Home = () => {
                     minHeight: "100vh",
                     display: "flex",
                     alignItems: "center",
-                    paddingTop: 80,
+                    paddingTop: 50,
                     position: "relative",
                     zIndex: 1,
                 }}
@@ -290,7 +290,7 @@ const Home = () => {
                                     fontSize: "0.85rem",
                                     color: "#14b8a6",
                                     fontWeight: 700,
-                                    marginBottom: 28,
+                                    marginBottom: 25,
                                     letterSpacing: "0.03em",
                                 }}
                             >
@@ -334,7 +334,6 @@ const Home = () => {
                                 maxWidth: 560,
                             }}
                         >
-                            Admins craft polls with close-ended options.{" "}
                             <span
                                 style={{
                                     background: "linear-gradient(90deg, #6366f1, #14b8a6)",
@@ -343,7 +342,7 @@ const Home = () => {
                                     fontWeight: 700,
                                 }}
                             >
-                                Students vote securely. Results secured stored on blockchain.
+                                Students votes are securely stored on blockchain.
                             </span>
                         </motion.p>
 
