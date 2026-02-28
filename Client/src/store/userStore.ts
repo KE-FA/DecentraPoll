@@ -7,6 +7,7 @@ export interface User {
   id: string;
   regNo: string;
   role: string;
+  walletAddress: string;
 }
 
 interface UserStore {
