@@ -224,7 +224,7 @@ const Home = () => {
     const heroOpacity = useTransform(scrollYProgress, [0, 0.45], [1, 0]);
     const cubeY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
 
-    
+
 
     return (
         <div
