@@ -11,7 +11,7 @@ model User {
   id            Int       @id @default(autoincrement())
   regNo         String    @unique
   password      String
-  role          Role // @default(STUDENT)
+  role          Role      @default(STUDENT)
   walletAddress String?   @unique
   createdAt     DateTime  @default(now())
   lastLoginAt   DateTime?

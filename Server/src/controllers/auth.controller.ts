@@ -29,10 +29,10 @@ export const registerUser = async (req: Request, res: Response) => {
 // Login User
 export const loginUser = async (req: Request, res: Response) => {
   try {
-    const { identifier, password } = req.body;
+    const { regNo, password } = req.body;
 
     const user = await client.user.findUnique({
-      where: { regNo: identifier },
+      where: { regNo: regNo },
     });
 
     if (!user) {
