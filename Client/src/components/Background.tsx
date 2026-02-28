@@ -1,4 +1,4 @@
-// import { Box } from "@mui/material";
+import { Box } from "@mui/material";
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import { useCallback, useEffect, useState } from "react";
@@ -8,7 +8,7 @@ const Background = () => {
     await loadFull(engine);
   }, []);
 
-  const [_mouse, setMouse] = useState({ x: 0, y: 0 });
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const move = (e: MouseEvent) => {
@@ -42,7 +42,7 @@ const Background = () => {
       />
 
       {/* Mouse Glow */}
-      {/* <Box
+      <Box
         sx={{
           position: "fixed",
           top: mouse.y - 150,
@@ -55,7 +55,7 @@ const Background = () => {
           pointerEvents: "none",
           zIndex: 0,
         }}
-      /> */}
+      />
     </>
   );
 };

@@ -1,68 +1,64 @@
 import { motion } from "framer-motion";
-import { Box } from "@mui/material";
+import { type ReactNode, useState } from "react";
 
-interface GlitchTextProps {
-  children: React.ReactNode;
-}
+const GlitchText = ({ children }: { children: ReactNode }) => {
+  const [glitching, setGlitching] = useState(false);
 
-const GlitchText = ({ children }: GlitchTextProps) => {
+  const triggerGlitch = () => {
+    setGlitching(true);
+    setTimeout(() => setGlitching(false), 500);
+  };
+
   return (
-    <Box sx={{ position: "relative", display: "inline-block" }}>
-      <motion.div
-        initial={{ opacity: 0, x: -100 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        style={{ position: "relative", zIndex: 2 }}
-      >
-        {children}
-      </motion.div>
-      
-      {/* Glitch layers */}
-      <motion.div
-        animate={{
-          opacity: [0, 0.7, 0],
-          x: [-2, 2, -2],
-        }}
-        transition={{
-          duration: 0.2,
-          repeat: Infinity,
-          repeatDelay: 5,
-        }}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          zIndex: 1,
-          color: "#6366f1",
-          mixBlendMode: "screen",
-        }}
-      >
-        {children}
-      </motion.div>
-      
-      <motion.div
-        animate={{
-          opacity: [0, 0.7, 0],
-          x: [2, -2, 2],
-        }}
-        transition={{
-          duration: 0.2,
-          repeat: Infinity,
-          repeatDelay: 5,
-          delay: 0.1,
-        }}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          zIndex: 1,
-          color: "#14b8a6",
-          mixBlendMode: "screen",
-        }}
-      >
-        {children}
-      </motion.div>
-    </Box>
+    <motion.div
+      onHoverStart={triggerGlitch}
+      style={{ position: "relative", display: "inline-block", cursor: "default" }}
+      animate={
+        glitching
+          ? {
+              x: [0, -4, 4, -2, 2, 0],
+              skewX: [0, -2, 2, -1, 0],
+            }
+          : {}
+      }
+      transition={{ duration: 0.4 }}
+    >
+      {children}
+      {glitching && (
+        <>
+          <motion.div
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0.6,
+              clipPath: "inset(30% 0 50% 0)",
+              transform: "translateX(-4px)",
+              filter: "hue-rotate(90deg)",
+              pointerEvents: "none",
+            }}
+            animate={{ x: [-4, 4, -2, 0] }}
+            transition={{ duration: 0.4 }}
+          >
+            {children}
+          </motion.div>
+          <motion.div
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0.5,
+              clipPath: "inset(60% 0 20% 0)",
+              transform: "translateX(4px)",
+              filter: "hue-rotate(-90deg)",
+              pointerEvents: "none",
+            }}
+            animate={{ x: [4, -4, 2, 0] }}
+            transition={{ duration: 0.4 }}
+          >
+            {children}
+          </motion.div>
+        </>
+      )}
+    </motion.div>
   );
 };
 

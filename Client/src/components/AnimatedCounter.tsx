@@ -1,60 +1,44 @@
-import { useEffect, useState, useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { useInView } from "framer-motion";
 
 interface AnimatedCounterProps {
   end: string;
   duration?: number;
 }
 
-const AnimatedCounter = ({ end, duration = 2 }: AnimatedCounterProps) => {
-  const [count, setCount] = useState("0");
-  const ref = useRef(null);
+const AnimatedCounter = ({ end, duration = 2.5 }: AnimatedCounterProps) => {
+  const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true });
+  const [display, setDisplay] = useState("0");
 
   useEffect(() => {
     if (!isInView) return;
 
-    // Extract number from string
-    const match = end.match(/(\d+\.?\d*)/);
+    // Parse suffix and numeric part
+    const match = end.match(/^(\d+)(.*)$/);
     if (!match) {
-      setCount(end);
+      setDisplay(end);
       return;
     }
 
-    const target = parseFloat(match[1]);
-    const suffix = end.replace(match[1], "");
-    const isDecimal = end.includes(".");
-    const steps = 60;
-    const increment = target / steps;
-    let current = 0;
-    let step = 0;
+    const target = parseInt(match[1], 10);
+    const suffix = match[2];
+    const startTime = performance.now();
+    const totalMs = duration * 1000;
 
-    const timer = setInterval(() => {
-      step++;
-      current += increment;
-      
-      if (step >= steps) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        const value = isDecimal ? current.toFixed(1) : Math.floor(current);
-        setCount(value + suffix);
-      }
-    }, (duration * 1000) / steps);
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / totalMs, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(eased * target);
+      setDisplay(`${current}${suffix}`);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
 
-    return () => clearInterval(timer);
-  }, [end, duration, isInView]);
+    requestAnimationFrame(tick);
+  }, [isInView, end, duration]);
 
-  return (
-    <motion.span
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5 }}
-    >
-      {count}
-    </motion.span>
-  );
+  return <span ref={ref}>{display}</span>;
 };
 
 export default AnimatedCounter;
