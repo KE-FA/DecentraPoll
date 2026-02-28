@@ -103,7 +103,7 @@ const Navbar = () => {
         ))}
       </div>
 
-      {/* CTA */}
+      {/* Log In */}
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         <motion.button
           whileHover={{ scale: 1.05 }}

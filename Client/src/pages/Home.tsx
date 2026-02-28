@@ -1,9 +1,11 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useState } from "react";
 import Navbar from "../components/Navbar";
+import { useNavigate } from "react-router-dom";
 import BlockchainCube from "../components/BlockchainCube";
 import AnimatedCounter from "../components/AnimatedCounter";
 import GlitchText from "../components/GlitchText";
+
 
 const stats = [
     { value: "250+", label: "Active Polls" },
@@ -179,8 +181,8 @@ const AnimatedOrbs = () => (
                     height: 300 + i * 50,
                     borderRadius: "50%",
                     background: `radial-gradient(circle, ${i % 2 === 0
-                            ? "rgba(99,102,241,0.22)"
-                            : "rgba(20,184,166,0.22)"
+                        ? "rgba(99,102,241,0.22)"
+                        : "rgba(20,184,166,0.22)"
                         }, transparent 70%)`,
                     top: `${(i * 13) % 100}%`,
                     left: `${(i * 17) % 100}%`,
@@ -211,6 +213,7 @@ const AnimatedGridLines = () => (
 
 /* Home page */
 const Home = () => {
+    const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
         target: containerRef,
@@ -221,9 +224,7 @@ const Home = () => {
     const heroOpacity = useTransform(scrollYProgress, [0, 0.45], [1, 0]);
     const cubeY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
 
-    const scrollTo = (id: string) => {
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    };
+    
 
     return (
         <div
@@ -304,7 +305,7 @@ const Home = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4, duration: 0.8 }}
                                 style={{
-                                    fontSize: "clamp(3rem, 7vw, 5.5rem)",
+                                    fontSize: "clamp(3rem, 7vw, 5.0rem)",
                                     fontWeight: 900,
                                     lineHeight: 1.05,
                                     margin: 0,
@@ -361,7 +362,8 @@ const Home = () => {
                             <motion.button
                                 whileHover={{ scale: 1.06 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => scrollTo("features")}
+                                onClick={() => navigate("/login")}
+
                                 style={{
                                     borderRadius: 50,
                                     padding: "16px 42px",
@@ -413,7 +415,7 @@ const Home = () => {
                             <span style={{ fontSize: "0.85rem", opacity: 0.65 }}>
                                 👨‍💻 Developed by KeDevs
                             </span>
-                            
+
                         </motion.div>
                     </motion.div>
 
@@ -816,6 +818,8 @@ const Home = () => {
                             <motion.button
                                 whileHover={{ scale: 1.06 }}
                                 whileTap={{ scale: 0.95 }}
+                                onClick={() => navigate("/login")}
+
                                 style={{
                                     borderRadius: 50,
                                     padding: "18px 56px",
