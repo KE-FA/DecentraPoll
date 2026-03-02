@@ -6,34 +6,25 @@ import {
   Tooltip,
   CartesianGrid
 } from "recharts";
-import { useEffect, useState } from "react";
-import { getVoteHistoryAPI } from "../../api/studentApi";
 import { Typography, Box } from "@mui/material";
 
-export default function AnalyticsChart() {
+interface AnalyticsChartProps {
+  voteHistory: any[];
+}
 
-  const [data, setData] = useState<any[]>([]);
+export default function AnalyticsChart({ voteHistory }: AnalyticsChartProps) {
 
-  useEffect(() => {
+  const grouped: any = {};
 
-    getVoteHistoryAPI().then(res => {
+  voteHistory.forEach((item: any) => {
+    grouped[item.poll_id] =
+      (grouped[item.poll_id] || 0) + 1;
+  });
 
-      const grouped: any = {};
-
-      res.data.forEach((item: any) => {
-        grouped[item.poll_id] =
-          (grouped[item.poll_id] || 0) + 1;
-      });
-
-      const formatted = Object.keys(grouped).map(key => ({
-        poll: key,
-        votes: grouped[key]
-      }));
-
-      setData(formatted);
-    });
-
-  }, []);
+  const data = Object.keys(grouped).map(key => ({
+    poll: key,
+    votes: grouped[key]
+  }));
 
   return (
     <Box mt={5}>
@@ -41,17 +32,21 @@ export default function AnalyticsChart() {
         📊 Participation Analytics
       </Typography>
 
-      <BarChart
-        width={500}
-        height={300}
-        data={data}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="poll" />
-        <YAxis />
-        <Tooltip />
-        <Bar dataKey="votes" />
-      </BarChart>
+      {data.length === 0 ? (
+        <Typography>No analytics yet.</Typography>
+      ) : (
+        <BarChart
+          width={500}
+          height={300}
+          data={data}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="poll" />
+          <YAxis />
+          <Tooltip />
+          <Bar dataKey="votes" />
+        </BarChart>
+      )}
     </Box>
   );
 }
