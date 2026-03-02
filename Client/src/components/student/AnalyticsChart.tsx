@@ -4,47 +4,54 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
+  CartesianGrid
 } from "recharts";
-import { Box, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
+import { getVoteHistoryAPI } from "../../api/studentApi";
+import { Typography, Box } from "@mui/material";
 
-export default function AnalyticsChart({ voteHistory }: any) {
+export default function AnalyticsChart() {
 
-  // Count votes per poll
-  const dataMap: any = {};
+  const [data, setData] = useState<any[]>([]);
 
-  voteHistory.forEach((vote: any) => {
-    if (!dataMap[vote.pollId]) {
-      dataMap[vote.pollId] = 0;
-    }
-    dataMap[vote.pollId]++;
-  });
+  useEffect(() => {
 
-  const chartData = Object.keys(dataMap).map((pollId) => ({
-    poll: `Poll ${pollId}`,
-    votes: dataMap[pollId],
-  }));
+    getVoteHistoryAPI().then(res => {
+
+      const grouped: any = {};
+
+      res.data.forEach((item: any) => {
+        grouped[item.poll_id] =
+          (grouped[item.poll_id] || 0) + 1;
+      });
+
+      const formatted = Object.keys(grouped).map(key => ({
+        poll: key,
+        votes: grouped[key]
+      }));
+
+      setData(formatted);
+    });
+
+  }, []);
 
   return (
-    <Box mt={6}>
-      <Typography variant="h5" mb={3}>
+    <Box mt={5}>
+      <Typography variant="h5">
         📊 Participation Analytics
       </Typography>
 
-      {chartData.length === 0 ? (
-        <Typography>No participation data yet</Typography>
-      ) : (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="poll" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="votes" fill="#6366f1" />
-          </BarChart>
-        </ResponsiveContainer>
-      )}
+      <BarChart
+        width={500}
+        height={300}
+        data={data}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="poll" />
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey="votes" />
+      </BarChart>
     </Box>
   );
 }
