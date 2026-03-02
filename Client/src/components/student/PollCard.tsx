@@ -1,6 +1,11 @@
 import { Card, CardContent, Typography, Button } from "@mui/material";
+import VoteProgressBar from "./VoteProgressBar";
 
-export default function PollCard({ poll, vote }: any) {
+export default function PollCard({
+  poll,
+  vote,
+  contract
+}: any) {
 
   return (
     <Card sx={{ mt: 3 }}>
@@ -20,6 +25,12 @@ export default function PollCard({ poll, vote }: any) {
             {opt}
           </Button>
         ))}
+
+        <VoteProgressBar
+          contract={contract}
+          pollId={poll.contract_poll_id}
+          options={poll.options}
+        />
 
       </CardContent>
     </Card>
