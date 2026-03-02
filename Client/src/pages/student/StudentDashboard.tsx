@@ -3,7 +3,7 @@ import { useWallet } from "../../hooks/useWallet";
 import { usePolls } from "../../hooks/usePolls";
 import { useVote } from "../../hooks/useVote";
 // import { Web3Context } from "../../context/Web3Context";
-import WalletGate from "../../components/student/WalletGate";
+import WalletGate from "../../components/WalletGate";
 import PollList from "../../components/student/PollList";
 // import { listenToEvents, fetchVoteHistory } from "../../web3/eventListener";
 import AnalyticsChart from "../../components/student/AnalyticsChart";

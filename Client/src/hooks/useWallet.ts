@@ -1,62 +1,45 @@
-// Manages Wallet State Globally
-
+// Manages Wallet State
 import { useState } from "react";
 import { ethers } from "ethers";
-import { getContract } from "../../src/web3/contract";
 import { getNonce, verifyAndBindWallet } from "../api/walletApi";
+import { getContract } from "../web3/contract";
 
 export function useWallet() {
 
-    const [wallet, setWallet] = useState<string>("");
-    const [contract, setContract] = useState<any>(null);
-    const [signer, setSigner] = useState<any>(null);
-    const [network, setNetwork] = useState<string>("");
+  const [wallet, setWallet] = useState("");
+  const [contract, setContract] = useState<any>(null);
+  const [signer, setSigner] = useState<any>(null);
 
-    const connectWallet = async () => {
+  const connectWallet = async () => {
 
-        if (!(window as any).ethereum) {
-            alert("Install MetaMask");
-            return;
-        }
+    const provider = new ethers.BrowserProvider(
+      (window as any).ethereum
+    );
 
-        const provider = new ethers.BrowserProvider(
-            (window as any).ethereum
-        );
+    const signerInstance = await provider.getSigner();
+    const address = await signerInstance.getAddress();
 
-        const signerInstance = await provider.getSigner();
-        const address = await signerInstance.getAddress();
+    setWallet(address);
+    setSigner(signerInstance);
+    setContract(getContract(signerInstance));
+  };
 
-        const networkInfo = await provider.getNetwork();
+  const bindWallet = async () => {
 
-        setWallet(address);
-        setSigner(signerInstance);
-        setNetwork(networkInfo.name);
+    const nonceRes = await getNonce();
+    const nonce = nonceRes.data.nonce;
 
-        setContract(getContract(signerInstance));
-    };
-    const bindWallet = async () => {
+    const signature = await signer.signMessage(nonce);
 
-        if (!signer || !wallet) return;
+    await verifyAndBindWallet(wallet, signature);
 
-        // 1️⃣ Get nonce from backend
-        const nonceResponse = await getNonce();
-        const nonce = nonceResponse.data.nonce;
+    alert("Wallet Bound Successfully");
+  };
 
-        // 2️⃣ Sign nonce with wallet
-        const signature = await signer.signMessage(nonce);
-
-        // 3️⃣ Send signature to backend for verification
-        await verifyAndBindWallet(wallet, signature);
-
-        alert("Wallet successfully bound to student account ✅");
-    };
-
-    return {
-        wallet,
-        contract,
-        signer,
-        network,
-        connectWallet,
-        bindWallet
-    };
+  return {
+    wallet,
+    contract,
+    connectWallet,
+    bindWallet
+  };
 }

@@ -2,28 +2,12 @@
 
 export function useVote(contract: any) {
 
-  const vote = async (
-    pollId: number,
-    optionIndex: number
-  ) => {
+  const vote = async (pollId: number, option: number) => {
 
-    if (!contract) {
-      alert("Contract not loaded");
-      return;
-    }
+    const tx = await contract.vote(pollId, option);
+    await tx.wait();
 
-    try {
-
-      const tx = await contract.vote(pollId, optionIndex);
-      await tx.wait();
-
-      alert("Vote successful ✅");
-
-    } catch (err: any) {
-
-      console.error(err);
-      alert(err.reason || "Voting failed ❌");
-    }
+    alert("Vote Successful");
   };
 
   return { vote };
