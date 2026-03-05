@@ -8,14 +8,21 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  regNo         String    @unique
+  id            Int     @id @default(autoincrement())
+  regNo         String  @unique
   password      String
-  role          Role      @default(STUDENT)
-  walletAddress String?   @unique
-  createdAt     DateTime  @default(now())
-  lastLoginAt   DateTime?
-  logins        Login[]
+  role          Role    @default(STUDENT)
+  walletAddress String? @unique @db.VarChar(42)
+
+  walletVerified Boolean @default(false)
+
+  createdAt   DateTime  @default(now())
+  lastLoginAt DateTime?
+
+  logins Login[]
+
+  voteHistory VoteHistory[]
+  polls       Poll[]
 
   @@map("users")
 }
@@ -32,4 +39,73 @@ model Login {
   timestamp DateTime @default(now())
 
   @@map("login")
+}
+
+model Poll {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String?
+
+  contractPollId  Int?
+  transactionHash String?
+
+  adminId Int
+  admin   User @relation(fields: [adminId], references: [id])
+
+  status PollStatus @default(PENDING)
+
+  deadline DateTime
+
+  createdAt DateTime @default(now())
+
+  options     PollOption[]
+  voteHistory VoteHistory[]
+
+  @@index([status])
+  @@map("polls")
+}
+
+enum PollStatus {
+  PENDING
+  ACTIVE
+  ENDED
+  APPROVED
+  REJECTED
+}
+
+model PollOption {
+  id Int @id @default(autoincrement())
+
+  pollId Int
+  poll   Poll @relation(fields: [pollId], references: [id])
+
+  label String
+  index Int
+
+  votes VoteHistory[]
+
+  @@map("poll_options")
+}
+
+model VoteHistory {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  pollId Int
+  poll   Poll @relation(fields: [pollId], references: [id])
+
+  optionId Int
+  option   PollOption @relation(fields: [optionId], references: [id])
+
+  txHash String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, pollId])
+  @@index([pollId])
+  @@index([userId])
+  @@map("vote_history")
 }

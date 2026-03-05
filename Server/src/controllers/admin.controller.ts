@@ -1,9 +1,93 @@
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import { blockchainService } from "../services/blockchain.service";
+import { PollStatus } from "@prisma/client";
 
 
 const client = new PrismaClient();
+
+// Create Poll
+export const createPoll = async (req: Request, res: Response) => {
+  try {
+    const adminId = req.user.id;
+    const { title, description, options, duration } = req.body;
+
+    if (!options || options.length < 2) {
+      return res.status(400).json({ message: "Minimum 2 options required" });
+    }
+
+    // 1️⃣ Save Poll as PENDING in DB
+    const poll = await client.poll.create({
+      data: {
+        title,
+        description,
+        adminId,
+        deadline: new Date(Date.now() + duration * 1000),
+        status: PollStatus.PENDING
+      }
+    });
+
+    // 2️⃣ Call Smart Contract
+    const tx = await blockchainService.createPoll(options, duration);
+
+    const receipt = await tx.wait();
+
+    const contractPollId = receipt.events?.find(
+      (e: any) => e.event === "PollCreated"
+    )?.args?.pollId;
+
+    // 3️⃣ Update DB with blockchain ID
+    await client.poll.update({
+      where: { id: poll.id },
+      data: {
+        contractPollId: Number(contractPollId),
+        transactionHash: receipt.transactionHash,
+        status: PollStatus.ACTIVE
+      }
+    });
+
+    res.json({ message: "Poll created successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Poll creation failed" });
+  }
+};
+
+// Approve Poll
+export const approvePoll = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const poll = await client.poll.update({
+      where: { id: Number(id) },
+      data: { status: PollStatus.APPROVED }
+    });
+
+    res.json(poll);
+
+  } catch (err) {
+    res.status(500).json({ error: "Approval failed" });
+  }
+};
+
+// Reject Poll
+export const rejectPoll = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const poll = await client.poll.update({
+      where: { id: Number(id) },
+      data: { status: PollStatus.REJECTED }
+    });
+
+    res.json(poll);
+
+  } catch (err) {
+    res.status(500).json({ error: "Rejection failed" });
+  }
+};
 
 
 // Get All Users
