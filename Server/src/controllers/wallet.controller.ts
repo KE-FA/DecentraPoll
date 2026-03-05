@@ -9,7 +9,7 @@ const client = new PrismaClient();
 const nonceStore = new Map<number, string>();
 
 // Hardcoded admin wallet
-const ADMIN_WALLET_ADDRESS = "0xADMIN_WALLET_ADDRESS_HERE".toLowerCase();
+const ADMIN_WALLET_ADDRESS = process.env.ADMIN_WALLET_ADDRESS!.toLowerCase();
 
 // Generate Nonce - Student Must be Logged In
 export const generateNonce = async (req: Request, res: Response) => {

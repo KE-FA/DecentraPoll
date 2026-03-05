@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.route";
 import adminRouter from "./routes/admin.route";
 import walletRouter from "./routes/wallet.route";
+import pollRouter from "./routes/polls.route"
 
 import { startEventIndexer } from "./services/eventIndexer.service";
 
@@ -32,6 +33,7 @@ app.get("/", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/wallet", walletRouter);
+app.use("/api/polls", pollRouter);
 
 startEventIndexer();
 

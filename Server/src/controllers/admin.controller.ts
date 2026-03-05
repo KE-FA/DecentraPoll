@@ -10,6 +10,9 @@ const client = new PrismaClient();
 // Create Poll
 export const createPoll = async (req: Request, res: Response) => {
   try {
+    if (!process.env.CONTRACT_ADDRESS || process.env.CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+      return res.status(400).json({ error: "Contract not deployed yet. Cannot create poll." });
+    }
     const adminId = req.user.id;
     const { title, description, options, duration } = req.body;
 
@@ -17,7 +20,7 @@ export const createPoll = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Minimum 2 options required" });
     }
 
-    // 1️⃣ Save Poll as PENDING in DB
+    // Save Poll as PENDING in DB
     const poll = await client.poll.create({
       data: {
         title,
@@ -28,7 +31,7 @@ export const createPoll = async (req: Request, res: Response) => {
       }
     });
 
-    // 2️⃣ Call Smart Contract
+    // Call Smart Contract
     const tx = await blockchainService.createPoll(options, duration);
 
     const receipt = await tx.wait();
@@ -37,7 +40,7 @@ export const createPoll = async (req: Request, res: Response) => {
       (e: any) => e.event === "PollCreated"
     )?.args?.pollId;
 
-    // 3️⃣ Update DB with blockchain ID
+    // Update DB with blockchain ID
     await client.poll.update({
       where: { id: poll.id },
       data: {
@@ -112,7 +115,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
 // Update user info
 export const updateUserInfo = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     const { regNo, password, role } = req.body;
 
     // Build update data dynamically
@@ -154,8 +157,8 @@ export const getUserInfo = async (req: Request, res: Response) => {
       where: { id: userId },
       select: {
         regNo: true,
-        role:true,
-        
+        role: true,
+
       },
     });
 

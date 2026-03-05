@@ -7,8 +7,14 @@ import { EventLog } from "ethers";
 const prisma = new PrismaClient();
 
 export const startEventIndexer = async () => {
+    if (!process.env.CONTRACT_ADDRESS || process.env.CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+        console.log("Contract not deployed yet. Skipping blockchain event indexing.");
+        return;
+    }
 
     console.log("Starting blockchain indexer...");
+    if (!contract) throw new Error("Contract not deployed yet");
+
 
     const provider = contract.runner?.provider;
 
@@ -82,6 +88,8 @@ export const startEventIndexer = async () => {
 const startLiveListener = () => {
 
     console.log("Listening for new votes...");
+    if (!contract) throw new Error("Contract not deployed yet");
+
 
     contract.on("Voted", async (voter, pollId, option, event) => {
 
