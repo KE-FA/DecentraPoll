@@ -58,6 +58,98 @@ export const createPoll = async (req: Request, res: Response) => {
   }
 };
 
+// Get all active polls
+export const getActivePolls = async (req: Request, res: Response) => {
+  try {
+    const polls = await client.poll.findMany({
+      where: { status: PollStatus.ACTIVE },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        deadline: true,
+        adminId: true,
+        contractPollId: true,
+        createdAt: true
+      }
+    });
+
+    res.json(polls);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch active polls" });
+  }
+};
+
+// Get details of a single poll
+export const getPollDetails = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const poll = await client.poll.findUnique({
+      where: { id: Number(id) },
+      include: {
+        admin: { select: { id: true, regNo: true } },
+        options: {
+          select: {
+            id: true,
+            label: true,
+            index: true,
+            votes: {
+              select: {
+                id: true,
+                userId: true,
+                txHash: true,
+                createdAt: true
+              }
+            }
+          },
+          orderBy: { index: "asc" }
+        },
+        voteHistory: {
+          select: {
+            id: true,
+            userId: true,
+            optionId: true,
+            txHash: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    if (!poll) {
+      return res.status(404).json({ error: "Poll not found" });
+    }
+
+    // Compute vote counts per option
+    const optionsWithCounts = poll.options.map(opt => ({
+      id: opt.id,
+      label: opt.label,
+      index: opt.index,
+      voteCount: opt.votes.length
+    }));
+
+    res.json({
+      id: poll.id,
+      title: poll.title,
+      description: poll.description,
+      deadline: poll.deadline,
+      status: poll.status,
+      contractPollId: poll.contractPollId,
+      createdAt: poll.createdAt,
+      admin: poll.admin,
+      options: optionsWithCounts
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch poll details" });
+  }
+};
+
 // Approve Poll
 export const approvePoll = async (req: Request, res: Response) => {
   try {

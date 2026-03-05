@@ -138,3 +138,54 @@ export const updateUserPassword = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
+
+// Get vote history for the logged-in user
+export const getUserVoteHistory = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user.id; // from your middleware
+
+    // Fetch all votes by this user
+    const votes = await client.voteHistory.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        poll: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            deadline: true,
+          }
+        },
+        option: {
+          select: {
+            id: true,
+            label: true,
+            index: true
+          }
+        }
+      }
+    });
+
+    // Format response
+    const history = votes.map(v => ({
+      pollId: v.poll.id,
+      pollTitle: v.poll.title,
+      pollDescription: v.poll.description,
+      pollStatus: v.poll.status,
+      pollDeadline: v.poll.deadline,
+      optionId: v.option.id,
+      optionLabel: v.option.label,
+      optionIndex: v.option.index,
+      votedAt: v.createdAt,
+      txHash: v.txHash
+    }));
+
+    res.json(history);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch vote history" });
+  }
+};

@@ -3,7 +3,8 @@ import {
   registerUser,
   loginUser,
   updateUserPassword,
-  logOutUser
+  logOutUser,
+  getUserVoteHistory
 } from "../controllers/auth.controller";
 
 import verifyUser  from "../middlewares/verifyUser.middleware";
@@ -22,5 +23,8 @@ router.patch("/password", verifyUser, updateUserPassword);
 
 // Logout (Logged-in user)
 router.post("/logout", verifyUser, logOutUser);
+
+// Get User Vote History
+router.get("/history", verifyUser, getUserVoteHistory)
 
 export default router;
