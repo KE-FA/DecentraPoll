@@ -5,6 +5,9 @@ import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.route";
 import adminRouter from "./routes/admin.route";
 import walletRouter from "./routes/wallet.route";
+
+import { startEventIndexer } from "./services/eventIndexer.service";
+
 // import signalRouter from "./routes/signal.route"
 
 
@@ -30,7 +33,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/wallet", walletRouter);
 
-
+startEventIndexer();
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

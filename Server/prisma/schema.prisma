@@ -100,7 +100,7 @@ model VoteHistory {
   optionId Int
   option   PollOption @relation(fields: [optionId], references: [id])
 
-  txHash String
+  txHash String @unique
 
   createdAt DateTime @default(now())
 
@@ -108,4 +108,14 @@ model VoteHistory {
   @@index([pollId])
   @@index([userId])
   @@map("vote_history")
+}
+
+// Keep Track of blocks
+model IndexerState {
+  id        Int @id @default(1)
+  lastBlock Int
+
+  updatedAt DateTime @updatedAt
+
+  @@map("indexer_state")
 }
