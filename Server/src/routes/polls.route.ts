@@ -21,8 +21,8 @@ router.get("/active", getActivePolls);
 router.get("/:id", getPollById);
 
 // Admin
-router.post("/admin/create", verifyAdmin, createPoll);
-router.post("/admin/:id/approve", verifyAdmin, approvePoll);
-router.post("/admin/:id/reject", verifyAdmin, rejectPoll);
+router.post("/create", verifyAdmin, createPoll);
+router.post("/:id/approve", verifyAdmin, approvePoll);
+router.post("/:id/reject", verifyAdmin, rejectPoll);
 
 export default router;

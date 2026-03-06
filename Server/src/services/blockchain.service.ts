@@ -4,21 +4,32 @@ import contractABI from "../abi/contract.json";
 
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 
-let contract: ethers.Contract | undefined;
+const wallet = new ethers.Wallet(
+  process.env.ADMIN_PRIVATE_KEY!,
+  provider
+);
 
-if (process.env.CONTRACT_ADDRESS && process.env.CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000") {
-  const wallet = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY!, provider);
+export const contract = new ethers.Contract(
+  process.env.CONTRACT_ADDRESS!,
+  contractABI,
+  wallet
+);
 
-  contract = new ethers.Contract(
-    process.env.CONTRACT_ADDRESS!,
-    contractABI,
-    wallet
-  );
-} else {
-  console.log("Contract not deployed yet, skipping blockchain calls");
-}
+// let contract: ethers.Contract | undefined;
 
-export { contract };
+// if (process.env.CONTRACT_ADDRESS && process.env.CONTRACT_ADDRESS !== "0x0000000000000000000000000000000000000000") {
+//   const wallet = new ethers.Wallet(process.env.ADMIN_PRIVATE_KEY!, provider);
+
+//   contract = new ethers.Contract(
+//     process.env.CONTRACT_ADDRESS!,
+//     contractABI,
+//     wallet
+//   );
+// } else {
+//   console.log("Contract not deployed yet, skipping blockchain calls");
+// }
+
+// export { contract };
 
 
 export const blockchainService = {
@@ -45,13 +56,3 @@ export const blockchainService = {
   }
 };
 
-// const wallet = new ethers.Wallet(
-//   process.env.ADMIN_PRIVATE_KEY!,
-//   provider
-// );
-
-// export const contract = new ethers.Contract(
-//   process.env.CONTRACT_ADDRESS!,
-//   contractABI,
-//   wallet
-// );

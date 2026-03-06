@@ -6,20 +6,20 @@ import {
   updateUserInfo,
   getUserInfo
 } from "../controllers/admin.controller";
-import { createPoll, approvePoll, rejectPoll } from "../controllers/admin.controller";
+// import { createPoll, approvePoll, rejectPoll } from "../controllers/admin.controller";
 
 import { verifyAdmin } from "../middlewares/verifyAdmin.middleware";
 
 const router = Router();
 
-// Create Poll
-router.post("/polls", verifyAdmin, createPoll);
+// // Create Poll
+// router.post("/create", verifyAdmin, createPoll);
 
-// Approve Poll
-router.post("/polls/:id", verifyAdmin, approvePoll);
+// // Approve Poll
+// router.post("/approve/:id", verifyAdmin, approvePoll);
 
-// Reject Poll
-router.post("/polls/:id", verifyAdmin, rejectPoll);
+// // Reject Poll
+// router.post("/reject/:id", verifyAdmin, rejectPoll);
 
 // Get all users 
 router.get("/users", verifyAdmin, getAllUsers);
