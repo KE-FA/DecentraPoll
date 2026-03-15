@@ -10,7 +10,7 @@ const client = new PrismaClient();
 // Create Poll
 export const createPoll = async (req: Request, res: Response) => {
   try {
-    if (!process.env.CONTRACT_ADDRESS || process.env.CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+    if (!process.env.CONTRACT_ADDRESS ) {
       return res.status(400).json({ error: "Contract not deployed yet. Cannot create poll." });
     }
     const adminId = req.user.id;

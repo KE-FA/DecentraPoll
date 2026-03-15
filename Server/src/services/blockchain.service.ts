@@ -11,7 +11,7 @@ const wallet = new ethers.Wallet(
 
 export const contract = new ethers.Contract(
   process.env.CONTRACT_ADDRESS!,
-  contractABI,
+  contractABI.abi,
   wallet
 );
 
@@ -50,7 +50,7 @@ export const blockchainService = {
         if (!contract) throw new Error("Contract not deployed yet");
 
 
-    const filter = contract.filters.Voted();
+    const filter = contract.filters.VoteCast();
 
     return await contract.queryFilter(filter);
   }

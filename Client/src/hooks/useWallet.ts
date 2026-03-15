@@ -13,7 +13,7 @@ export function useWallet() {
   const connectWallet = async () => {
 
     const provider = new ethers.BrowserProvider(
-      (window as any).ethereum
+      (window as any).ethereum 
     );
 
     const signerInstance = await provider.getSigner();
