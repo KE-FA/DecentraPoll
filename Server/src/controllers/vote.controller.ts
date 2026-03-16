@@ -11,21 +11,34 @@ export const recordVote = async (req: Request, res: Response) => {
     const userId = req.user.id;
     const { pollId, optionIndex } = req.body;
 
+    // Fetch poll with options
     const poll = await client.poll.findUnique({
       where: { id: pollId },
-      include: { options: true }
+      include: { options: true },
     });
 
     if (!poll) return res.status(404).json({ error: "Poll not found" });
-    if (poll.status !== "ACTIVE") return res.status(400).json({ error: "Poll not active" });
 
+    if (poll.status !== "ACTIVE")
+      return res.status(400).json({ error: "Poll not active" });
+
+    // Validate optionIndex
+    if (
+      optionIndex === undefined ||
+      optionIndex < 0 ||
+      optionIndex >= poll.options.length
+    ) {
+      return res.status(400).json({ error: "Invalid option selected" });
+    }
+
+    // Check if user already voted
     const existing = await client.voteHistory.findUnique({
-      where: { userId_pollId: { userId, pollId } }
+      where: { userId_pollId: { userId, pollId } },
     });
     if (existing) return res.status(400).json({ error: "User already voted" });
 
     // Send vote to blockchain
-    const tx = await contract.vote(pollId, optionIndex);
+    const tx = await contract.vote(poll.contractPollId!, optionIndex);
     const receipt = await tx.wait();
 
     // Store vote history in DB
@@ -33,14 +46,14 @@ export const recordVote = async (req: Request, res: Response) => {
       data: {
         userId,
         pollId,
-        optionId: poll.options[optionIndex].id,
-        txHash: receipt.transactionHash
-      }
+        optionId: poll.options[optionIndex].pollId, 
+        txHash: receipt.transactionHash,
+      },
     });
 
     res.status(201).json({ message: "Vote recorded", vote });
   } catch (err) {
-    console.error(err);
+    console.error("Failed to record vote:", err);
     res.status(500).json({ error: "Failed to record vote" });
   }
 };
@@ -48,7 +61,7 @@ export const recordVote = async (req: Request, res: Response) => {
 // Fetch user's vote history
 export const getUserVoteHistory = async (req: Request, res: Response) => {
   try {
-    const userId = req.user.id; // middleware sets req.user
+    const userId = req.user.id; 
 
     const votes = await client.voteHistory.findMany({
       where: { userId },

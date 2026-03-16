@@ -61,7 +61,7 @@ const Login: React.FC = () => {
           },
         });
 
-        navigate("/dashboard");
+        navigate("/studentDashboard");
       } else {
         setError("Access denied");
       }

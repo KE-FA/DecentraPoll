@@ -5,7 +5,8 @@ import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.route";
 import adminRouter from "./routes/admin.route";
 import walletRouter from "./routes/wallet.route";
-import pollRouter from "./routes/polls.route"
+import pollRouter from "./routes/polls.route";
+import voteRouter from "./routes/vote.route"
 
 
 // import signalRouter from "./routes/signal.route"
@@ -33,6 +34,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/wallet", walletRouter);
 app.use("/api/polls", pollRouter);
+app.use("/api/vote", voteRouter);
+
 
 
 const PORT = process.env.PORT || 4000;

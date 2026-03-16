@@ -18,7 +18,7 @@ function App() {
 
       {/* User-only route */}
       <Route
-              path="/student"
+              path="/studentDashboard"
               element={
                 <Protected requireRole="STUDENT">
                   <StudentDashboard />

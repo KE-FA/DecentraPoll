@@ -8,7 +8,7 @@ export function useVoteHistory(contract: any, wallet: string | null) {
 
     async function fetchHistory() {
       try {
-        const filter = contract.filters.Voted(wallet);
+        const filter = contract.filters.VoteCast(wallet);
         const events = await contract.queryFilter(filter);
 
         const history = events.map((event: any) => ({

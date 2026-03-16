@@ -24,7 +24,7 @@ export const createPoll = async (req: Request, res: Response) => {
         title,
         description,
         adminId,
-        deadline: new Date(Date.now() + duration * 1000),
+        deadline: new Date(Date.now() + duration * 1000), // In secs
         status: PollStatus.PENDING,
       },
     });
