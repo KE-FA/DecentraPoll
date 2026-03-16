@@ -21,7 +21,7 @@ const router = Router();
 router.get("/", getAllPolls);
 router.get("/active", getActivePolls);
 router.get("/:id", getPollById);
-router.get("/results", getPollResults);
+router.get("/:id/results", getPollResults);
 
 
 // Admin

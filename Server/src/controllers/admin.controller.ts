@@ -18,7 +18,7 @@ export const createPoll = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Minimum 2 options required" });
     }
 
-    // 1️⃣ Create poll in DB as PENDING
+    // Create poll in DB as PENDING
     const poll = await client.poll.create({
       data: {
         title,
@@ -29,16 +29,16 @@ export const createPoll = async (req: Request, res: Response) => {
       },
     });
 
-    // 2️⃣ Send transaction to blockchain
+    // Send transaction to blockchain
     const tx = await blockchainService.createPoll(options, duration);
 
     // Save the transaction hash from the transaction object
     const transactionHash = tx.hash;
 
-    // 3️⃣ Wait for transaction to be mined
+    // Wait for transaction to be mined
     const receipt = await tx.wait();
 
-    // 4️⃣ Extract PollCreated event to get contractPollId
+    // Extract PollCreated event to get contractPollId
     let contractPollId: number | null = null;
     if (receipt.events && receipt.events.length) {
       for (const e of receipt.events) {
@@ -69,7 +69,7 @@ export const createPoll = async (req: Request, res: Response) => {
         .json({ error: "Failed to get contract poll ID from blockchain" });
     }
 
-    // 5️⃣ Save poll options in DB
+    // Save poll options in DB
     await client.pollOption.createMany({
       data: options.map((label: string, index: number) => ({
         pollId: poll.id,
@@ -78,7 +78,7 @@ export const createPoll = async (req: Request, res: Response) => {
       })),
     });
 
-    // 6️⃣ Update poll with blockchain info and set ACTIVE
+    // Update poll with blockchain info and set ACTIVE
     const updatedPoll = await client.poll.update({
       where: { id: poll.id },
       data: {
@@ -208,7 +208,7 @@ export const deletePoll = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Poll not found" });
     }
 
-    // Delete associated vote history first (foreign key constraint)
+    // Delete associated vote history first 
     await client.voteHistory.deleteMany({
       where: { pollId },
     });

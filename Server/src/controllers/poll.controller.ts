@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 // Fetch poll results
 export const getPollResults = async (req: Request, res: Response) => {
   try {
-    const pollId = Number(req.params.pollId);
+    const pollId = Number(req.params.id);
 
     // Fetch poll with options
     const poll = await prisma.poll.findUnique({
