@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { blockchainService } from "../services/blockchain.service";
+import { contract } from "../services/blockchain.service";
 
 const client = new PrismaClient();
 
@@ -8,39 +8,40 @@ const client = new PrismaClient();
 // Record a vote submitted by the user
 export const recordVote = async (req: Request, res: Response) => {
   try {
-    const { txHash, pollId, optionIndex, walletAddress } = req.body;
+    const userId = req.user.id;
+    const { pollId, optionIndex } = req.body;
 
-    // Verify the transaction actually succeeded on-chain
-    const verified = await blockchainService.verifyTransaction(txHash);
-    if (!verified) return res.status(400).json({ error: "Invalid or failed transaction" });
+    const poll = await client.poll.findUnique({
+      where: { id: pollId },
+      include: { options: true }
+    });
 
-    // Check if vote already recorded
-    const existing = await client.voteHistory.findUnique({ where: { txHash } });
-    if (existing) return res.json({ message: "Vote already recorded" });
+    if (!poll) return res.status(404).json({ error: "Poll not found" });
+    if (poll.status !== "ACTIVE") return res.status(400).json({ error: "Poll not active" });
 
-    // Find the user
-    const user = await client.user.findUnique({ where: { walletAddress } });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    const existing = await client.voteHistory.findUnique({
+      where: { userId_pollId: { userId, pollId } }
+    });
+    if (existing) return res.status(400).json({ error: "User already voted" });
 
-    // Find the poll option
-    const option = await client.pollOption.findFirst({ where: { pollId, index: optionIndex } });
-    if (!option) return res.status(404).json({ error: "Option not found" });
+    // Send vote to blockchain
+    const tx = await contract.vote(pollId, optionIndex);
+    const receipt = await tx.wait();
 
-    // Store vote in DB
-    await client.voteHistory.create({
+    // Store vote history in DB
+    const vote = await client.voteHistory.create({
       data: {
-        userId: user.id,
+        userId,
         pollId,
-        optionId: option.id,
-        txHash
+        optionId: poll.options[optionIndex].id,
+        txHash: receipt.transactionHash
       }
     });
 
-    return res.json({ message: "Vote recorded successfully" });
-
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Server error" });
+    res.status(201).json({ message: "Vote recorded", vote });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to record vote" });
   }
 };
 

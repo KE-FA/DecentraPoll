@@ -9,7 +9,8 @@ import {
 import {
   createPoll,
   approvePoll,
-  rejectPoll
+  rejectPoll,
+  deletePoll
 } from "../controllers/admin.controller";
 
 import {verifyAdmin} from "../middlewares/verifyAdmin.middleware";
@@ -25,6 +26,7 @@ router.get("/results", getPollResults);
 
 // Admin
 router.post("/create", verifyAdmin, createPoll);
+router.delete("/:id", verifyAdmin, deletePoll);
 router.post("/:id/approve", verifyAdmin, approvePoll);
 router.post("/:id/reject", verifyAdmin, rejectPoll);
 

@@ -1,8 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import { blockchainService } from "../services/blockchain.service";
+import { contract, blockchainService } from "../services/blockchain.service";
 import { PollStatus } from "@prisma/client";
+import { Log, EventLog } from "ethers";
 
 
 const client = new PrismaClient();
@@ -10,9 +11,6 @@ const client = new PrismaClient();
 // Create Poll
 export const createPoll = async (req: Request, res: Response) => {
   try {
-    if (!process.env.CONTRACT_ADDRESS ) {
-      return res.status(400).json({ error: "Contract not deployed yet. Cannot create poll." });
-    }
     const adminId = req.user.id;
     const { title, description, options, duration } = req.body;
 
@@ -20,65 +18,100 @@ export const createPoll = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Minimum 2 options required" });
     }
 
-    // Save Poll as PENDING in DB
+    // 1️⃣ Create poll in DB as PENDING
     const poll = await client.poll.create({
       data: {
         title,
         description,
         adminId,
         deadline: new Date(Date.now() + duration * 1000),
-        status: PollStatus.PENDING
-      }
+        status: PollStatus.PENDING,
+      },
     });
 
-    // Call Smart Contract
+    // 2️⃣ Send transaction to blockchain
     const tx = await blockchainService.createPoll(options, duration);
 
+    // Save the transaction hash from the transaction object
+    const transactionHash = tx.hash;
+
+    // 3️⃣ Wait for transaction to be mined
     const receipt = await tx.wait();
 
-    const contractPollId = receipt.events?.find(
-      (e: any) => e.event === "PollCreated"
-    )?.args?.pollId;
-
-    // Update DB with blockchain ID
-    await client.poll.update({
-      where: { id: poll.id },
-      data: {
-        contractPollId: Number(contractPollId),
-        transactionHash: receipt.transactionHash,
-        status: PollStatus.ACTIVE
+    // 4️⃣ Extract PollCreated event to get contractPollId
+    let contractPollId: number | null = null;
+    if (receipt.events && receipt.events.length) {
+      for (const e of receipt.events) {
+        if ("args" in e && e.event === "PollCreated") {
+          contractPollId = Number(e.args.pollId);
+          break;
+        }
       }
+    }
+
+
+    // Fallback: query the event if not found in receipt
+    if (!contractPollId) {
+      const filter = contract.filters.PollCreated();
+      const events = await contract.queryFilter(
+        filter,
+        receipt.blockNumber,
+        receipt.blockNumber
+      );
+      if (events.length && "args" in events[0]) {
+        contractPollId = Number(events[0].args.pollId);
+      }
+    }
+
+    if (!contractPollId) {
+      return res
+        .status(500)
+        .json({ error: "Failed to get contract poll ID from blockchain" });
+    }
+
+    // 5️⃣ Save poll options in DB
+    await client.pollOption.createMany({
+      data: options.map((label: string, index: number) => ({
+        pollId: poll.id,
+        label,
+        index,
+      })),
     });
 
-    res.json({ message: "Poll created successfully" });
+    // 6️⃣ Update poll with blockchain info and set ACTIVE
+    const updatedPoll = await client.poll.update({
+      where: { id: poll.id },
+      data: {
+        contractPollId,
+        transactionHash,
+        status: PollStatus.ACTIVE,
+      },
+      include: { options: true },
+    });
 
+    // Return full poll object
+    res.json({
+      message: "Poll created successfully",
+      poll: updatedPoll,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Create Poll Error:", err);
     res.status(500).json({ error: "Poll creation failed" });
   }
 };
 
 // Get all active polls
-export const getActivePolls = async (req: Request, res: Response) => {
+export const getActivePolls = async (_req: Request, res: Response) => {
   try {
     const polls = await client.poll.findMany({
       where: { status: PollStatus.ACTIVE },
+      include: { options: true },
       orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        deadline: true,
-        adminId: true,
-        contractPollId: true,
-        createdAt: true
-      }
     });
 
     res.json(polls);
-
   } catch (err) {
-    console.error(err);
+    console.error("Failed to fetch active polls:", err);
     res.status(500).json({ error: "Failed to fetch active polls" });
   }
 };
@@ -86,64 +119,37 @@ export const getActivePolls = async (req: Request, res: Response) => {
 // Get details of a single poll
 export const getPollDetails = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const pollId = Number(req.params.id);
 
     const poll = await client.poll.findUnique({
-      where: { id: Number(id) },
+      where: { id: pollId },
       include: {
+        options: { select: { id: true, label: true, index: true } },
         admin: { select: { id: true, regNo: true } },
-        options: {
-          select: {
-            id: true,
-            label: true,
-            index: true,
-            votes: {
-              select: {
-                id: true,
-                userId: true,
-                txHash: true,
-                createdAt: true
-              }
-            }
-          },
-          orderBy: { index: "asc" }
-        },
-        voteHistory: {
-          select: {
-            id: true,
-            userId: true,
-            optionId: true,
-            txHash: true,
-            createdAt: true
-          }
-        }
+        voteHistory: { select: { id: true, userId: true, optionId: true, txHash: true, createdAt: true } }
       }
     });
 
-    if (!poll) {
-      return res.status(404).json({ error: "Poll not found" });
-    }
+    if (!poll) return res.status(404).json({ error: "Poll not found" });
 
-    // Compute vote counts per option
-    const optionsWithCounts = poll.options.map(opt => ({
-      id: opt.id,
-      label: opt.label,
-      index: opt.index,
-      voteCount: opt.votes.length
-    }));
+    // Fetch blockchain vote counts for each option
+    const optionsWithCounts = await Promise.all(
+      poll.options.map(async (opt: any) => {
+        const count = await blockchainService.getVotes(pollId, opt.index);
+        return { ...opt, voteCount: Number(count) };
+      })
+    );
 
     res.json({
       id: poll.id,
       title: poll.title,
       description: poll.description,
-      deadline: poll.deadline,
       status: poll.status,
-      contractPollId: poll.contractPollId,
-      createdAt: poll.createdAt,
+      deadline: poll.deadline,
       admin: poll.admin,
-      options: optionsWithCounts
+      options: optionsWithCounts,
+      voteHistory: poll.voteHistory
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch poll details" });
@@ -184,6 +190,45 @@ export const rejectPoll = async (req: Request, res: Response) => {
   }
 };
 
+// Delete Poll
+export const deletePoll = async (req: Request, res: Response) => {
+  try {
+    const pollId = Number(req.params.id);
+
+    if (isNaN(pollId)) {
+      return res.status(400).json({ error: "Invalid poll ID" });
+    }
+
+    // Check if poll exists
+    const poll = await client.poll.findUnique({
+      where: { id: pollId },
+    });
+
+    if (!poll) {
+      return res.status(404).json({ error: "Poll not found" });
+    }
+
+    // Delete associated vote history first (foreign key constraint)
+    await client.voteHistory.deleteMany({
+      where: { pollId },
+    });
+
+    // Delete associated options
+    await client.pollOption.deleteMany({
+      where: { pollId },
+    });
+
+    // Delete the poll itself
+    await client.poll.delete({
+      where: { id: pollId },
+    });
+
+    res.json({ message: "Poll deleted successfully" });
+  } catch (err) {
+    console.error("Delete Poll Error:", err);
+    res.status(500).json({ error: "Failed to delete poll" });
+  }
+};
 
 // Get All Users
 export const getAllUsers = async (req: Request, res: Response) => {
