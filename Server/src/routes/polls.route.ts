@@ -2,7 +2,8 @@ import { Router } from "express";
 import {
   getAllPolls,
   getActivePolls,
-  getPollById
+  getPollById,
+  getPollResults
 } from "../controllers/poll.controller";
 
 import {
@@ -19,6 +20,8 @@ const router = Router();
 router.get("/", getAllPolls);
 router.get("/active", getActivePolls);
 router.get("/:id", getPollById);
+router.get("/results", getPollResults);
+
 
 // Admin
 router.post("/create", verifyAdmin, createPoll);

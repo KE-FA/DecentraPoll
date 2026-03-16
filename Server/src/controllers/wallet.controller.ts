@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 const client = new PrismaClient();
 
-// In-memory nonce store (OK for prototype)
+// In-memory nonce store 
 const nonceStore = new Map<number, string>();
 
 // Hardcoded admin wallet
