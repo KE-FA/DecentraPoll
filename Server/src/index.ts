@@ -7,7 +7,6 @@ import adminRouter from "./routes/admin.route";
 import walletRouter from "./routes/wallet.route";
 import pollRouter from "./routes/polls.route"
 
-import { startEventIndexer } from "./services/eventIndexer.service";
 
 // import signalRouter from "./routes/signal.route"
 
@@ -35,7 +34,6 @@ app.use("/api/admin", adminRouter);
 app.use("/api/wallet", walletRouter);
 app.use("/api/polls", pollRouter);
 
-startEventIndexer();
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
