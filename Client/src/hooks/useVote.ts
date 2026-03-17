@@ -1,4 +1,5 @@
 import toast from "react-hot-toast";
+import axiosInstance from "../api/axiosInstance";
 
 export function useVote(contract: any) {
 
@@ -8,6 +9,14 @@ export function useVote(contract: any) {
       const tx = await contract.vote(pollId, optionIndex);
 
       await tx.wait();
+
+      await axiosInstance.post(
+        "/api/vote/record",
+        { pollId, optionIndex },
+        { withCredentials: true }
+      );
+
+      
 
       toast.success("Vote Successful", { id: toastId });
     } catch (error: any) {

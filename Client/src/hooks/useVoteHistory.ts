@@ -1,30 +1,25 @@
 import { useEffect, useState } from "react";
+import axiosInstance from "../api/axiosInstance";
 
-export function useVoteHistory(contract: any, wallet: string | null) {
+export function useVoteHistory(wallet: string | null) {
   const [voteHistory, setVoteHistory] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!contract || !wallet) return;
+    if (!wallet) return;
 
     async function fetchHistory() {
       try {
-        const filter = contract.filters.VoteCast(wallet);
-        const events = await contract.queryFilter(filter);
-
-        const history = events.map((event: any) => ({
-          pollId: event.args.pollId.toString(),
-          option: event.args.option.toString(),
-          txHash: event.transactionHash
-        }));
-
-        setVoteHistory(history);
+        const response = await axiosInstance.get("/api/vote/history", {
+          withCredentials: true,
+        });
+        setVoteHistory(response.data);
       } catch (err) {
         console.error("Failed to fetch vote history", err);
       }
     }
 
     fetchHistory();
-  }, [contract, wallet]);
+  }, [wallet]);
 
   return { voteHistory };
 }

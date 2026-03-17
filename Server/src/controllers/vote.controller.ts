@@ -46,8 +46,8 @@ export const recordVote = async (req: Request, res: Response) => {
       data: {
         userId,
         pollId,
-        optionId: poll.options[optionIndex].pollId, 
-        txHash: receipt.transactionHash,
+        optionId: poll.options[optionIndex].id,
+        txHash: tx.hash,
       },
     });
 
@@ -61,7 +61,7 @@ export const recordVote = async (req: Request, res: Response) => {
 // Fetch user's vote history
 export const getUserVoteHistory = async (req: Request, res: Response) => {
   try {
-    const userId = req.user.id; 
+    const userId = req.user.id;
 
     const votes = await client.voteHistory.findMany({
       where: { userId },

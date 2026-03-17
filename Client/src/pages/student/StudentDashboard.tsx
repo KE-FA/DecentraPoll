@@ -388,7 +388,7 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
 
           {voted && (
             <Alert severity="success" sx={{ mb: 3 }}>
-              You have voted! Check the results below.
+              You have voted! Check the results on the results tab.
             </Alert>
           )}
 
@@ -870,7 +870,7 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
   const { wallet, contract, connectWallet, isConnecting, isCheckingWallet } = useWallet();
   const { polls, loading } = usePollsApi();
-  const { voteHistory } = useVoteHistory(contract, wallet);
+  const { voteHistory } = useVoteHistory(wallet);
 
   const [activeTab, setActiveTab] = useState("active-polls");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
