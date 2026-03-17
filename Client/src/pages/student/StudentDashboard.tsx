@@ -629,7 +629,7 @@ function ResultsSection({ polls, contract, loading }: { polls: any[]; contract: 
           };
 
           for (const opt of poll.options) {
-            const count = await contract.voteCounts(poll.contractPollId, opt.index);
+            const count = await contract.voteCounts(poll.pollId, opt.index);
             pollResults.counts.push(Number(count));
             pollResults.total += Number(count);
           }
