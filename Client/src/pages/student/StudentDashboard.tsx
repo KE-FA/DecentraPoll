@@ -1,21 +1,201 @@
 import { useEffect, useState } from "react";
 import {
+  Box,
   Container,
   Typography,
-  Box,
-  CircularProgress,
   Button,
   Card,
-  CardContent
+  CardContent,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider,
+  Chip,
+  Paper,
+  Stack,
+  IconButton,
+  CircularProgress,
+  Alert,
+  Skeleton
 } from "@mui/material";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { useWallet } from "../../hooks/useWallet";
 import { useVote } from "../../hooks/useVote";
 import { usePollsApi } from "../../hooks/usePollsApi";
 import { useVoteHistory } from "../../hooks/useVoteHistory";
-import WalletGate from "../../components/WalletGate";
 
-// Vote progress bar
+// Navbar Component with integrated wallet connection
+const DashboardNavbar = ({
+  wallet,
+  onConnect,
+  isConnecting,
+  onProfileClick,
+  activeTab,
+  setActiveTab,
+}: {
+  wallet: string | null;
+  onConnect: () => void;
+  isConnecting: boolean;
+  onProfileClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}) => {
+  return (
+    <Box
+      sx={{
+        position: "sticky",
+        top: 0,
+        zIndex: 1000,
+        background:
+          "linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(15, 23, 42, 0.95))",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(99, 102, 241, 0.2)",
+        boxShadow: "0 10px 40px rgba(0, 0, 0, 0.3)",
+      }}
+    >
+      <Container maxWidth="xl">
+        <Box sx={{ py: 2.5, display: "flex", alignItems: "center", gap: 4 }}>
+          {/* Logo and Title */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              cursor: "pointer",
+              "&:hover": { opacity: 0.9 },
+            }}
+            onClick={() => setActiveTab("active-polls")}
+          >
+            <Box
+              sx={{
+                width: 45,
+                height: 45,
+                borderRadius: "12px",
+                background: "linear-gradient(135deg, #6366f1, #14b8a6)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 0 30px rgba(99, 102, 241, 0.5)",
+              }}
+            >
+              <Typography variant="h6">🎓</Typography>
+            </Box>
+            <Typography
+              variant="h5"
+              fontWeight="bold"
+              sx={{
+                background: "linear-gradient(135deg, #6366f1, #14b8a6)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              DecentraPoll
+            </Typography>
+          </Box>
+
+          {/* Navigation Links */}
+          <Stack direction="row" spacing={1} sx={{ ml: 4, flex: 1 }}>
+            {[
+              { id: "active-polls", label: "Active Polls", icon: "📊" },
+              { id: "my-votes", label: "My Votes", icon: "🗳️" },
+              { id: "results", label: "Results", icon: "📈" },
+            ].map((tab) => (
+              <Button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                disabled={!wallet}
+                sx={{
+                  px: 4,
+                  py: 1.5,
+                  color: activeTab === tab.id ? "#14b8a6" : "rgba(255,255,255,0.7)",
+                  background:
+                    activeTab === tab.id
+                      ? "rgba(20, 184, 166, 0.1)"
+                      : "transparent",
+                  borderRadius: "50px",
+                  textTransform: "none",
+                  fontWeight: activeTab === tab.id ? 700 : 500,
+                  border:
+                    activeTab === tab.id
+                      ? "1px solid rgba(20, 184, 166, 0.3)"
+                      : "1px solid transparent",
+                  transition: "all 0.3s ease",
+                  opacity: !wallet ? 0.5 : 1,
+                  "&:hover": {
+                    background: "rgba(20, 184, 166, 0.15)",
+                    border: "1px solid rgba(20, 184, 166, 0.4)",
+                  },
+                  "&:disabled": {
+                    color: "rgba(255,255,255,0.4)",
+                  },
+                }}
+              >
+                {tab.icon} {tab.label}
+              </Button>
+            ))}
+          </Stack>
+
+          {/* Connect Wallet Button / Profile */}
+          {!wallet ? (
+            <Button
+              variant="contained"
+              onClick={onConnect}
+              disabled={isConnecting}
+              sx={{
+                px: 5,
+                py: 1.5,
+                borderRadius: "50px",
+                background: "linear-gradient(135deg, #6366f1, #14b8a6)",
+                fontWeight: 700,
+                boxShadow: "0 0 30px rgba(99, 102, 241, 0.4)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #5858d6, #10a89f)",
+                  boxShadow: "0 0 40px rgba(99, 102, 241, 0.6)",
+                },
+                "&:disabled": {
+                  background: "linear-gradient(135deg, #6366f1, #14b8a6)",
+                  opacity: 0.7,
+                },
+              }}
+            >
+              {isConnecting ? (
+                <>
+                  <CircularProgress size={20} sx={{ color: "white", mr: 1 }} />
+                  Connecting...
+                </>
+              ) : (
+                "🔐 Connect Wallet"
+              )}
+            </Button>
+          ) : (
+            <IconButton
+              onClick={onProfileClick}
+              sx={{
+                width: 45,
+                height: 45,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #6366f1, #14b8a6)",
+                border: "2px solid rgba(255,255,255,0.3)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  transform: "scale(1.1)",
+                  boxShadow: "0 0 30px rgba(99, 102, 241, 0.6)",
+                },
+              }}
+            >
+              <Avatar sx={{ width: 35, height: 35, fontSize: "1.2rem" }}>
+                🎓
+              </Avatar>
+            </IconButton>
+          )}
+        </Box>
+      </Container>
+    </Box>
+  );
+};
+
+// Vote Progress Bar
 type Option = {
   id: number;
   pollId: number;
@@ -27,8 +207,13 @@ function VoteProgressBar({
   contract,
   pollId,
   options,
-  refreshSignal
-}: any) {
+  refreshSignal,
+}: {
+  contract: any;
+  pollId: number;
+  options: Option[];
+  refreshSignal: number;
+}) {
   const [counts, setCounts] = useState<number[]>([]);
   const [total, setTotal] = useState(0);
 
@@ -36,7 +221,7 @@ function VoteProgressBar({
     const loadVotes = async () => {
       if (!contract) return;
 
-      let temp: number[] = [];
+      const temp: number[] = [];
       let sum = 0;
 
       for (const opt of options) {
@@ -60,22 +245,26 @@ function VoteProgressBar({
 
         return (
           <Box key={opt.id} mb={2}>
-            <Typography>{opt.label}</Typography>
+            <Typography variant="body2" sx={{ mb: 0.5, color: "rgba(255,255,255,0.8)" }}>
+              {opt.label}
+            </Typography>
 
-            <Box sx={{ background: "#eee", borderRadius: 2 }}>
+            <Box sx={{ background: "rgba(255,255,255,0.1)", borderRadius: 2, height: 12, overflow: "hidden" }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
-                transition={{ duration: 0.6 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
                 style={{
-                  height: 12,
-                  background: "#6366f1",
-                  borderRadius: 8
+                  height: "100%",
+                  background: "linear-gradient(90deg, #6366f1, #14b8a6)",
+                  borderRadius: 8,
                 }}
               />
             </Box>
 
-            <Typography variant="caption">{counts[index] || 0} votes</Typography>
+            <Typography variant="caption" sx={{ mt: 0.5, color: "rgba(255,255,255,0.6)" }}>
+              {counts[index] || 0} votes ({percentage.toFixed(1)}%)
+            </Typography>
           </Box>
         );
       })}
@@ -84,163 +273,766 @@ function VoteProgressBar({
 }
 
 // Poll Card
-function PollCard({ poll, vote, contract }: any) {
-  if (!poll) return null;
+function PollCard({ poll, vote, contract }: { poll: any; vote: any; contract: any }) {
+  const [voted, setVoted] = useState(false);
+  const [refreshSignal, setRefreshSignal] = useState(0);
+
+  const handleVote = async (optionIndex: number) => {
+    try {
+      await vote(poll.contractPollId, optionIndex);
+      setVoted(true);
+      setRefreshSignal((prev) => prev + 1);
+    } catch (error) {
+      console.error("Vote failed:", error);
+    }
+  };
 
   return (
-    <Card sx={{ mt: 3 }}>
-      <CardContent>
-        <Typography variant="h6">{poll.title}</Typography>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card
+        sx={{
+          background: "rgba(17, 24, 39, 0.6)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid rgba(99, 102, 241, 0.2)",
+          borderRadius: "20px",
+          overflow: "hidden",
+          transition: "all 0.3s ease",
+          "&:hover": {
+            border: "1px solid rgba(99, 102, 241, 0.4)",
+            boxShadow: "0 20px 60px rgba(99, 102, 241, 0.2)",
+          },
+        }}
+      >
+        <CardContent sx={{ p: 4 }}>
+          <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center" }}>
+            <Chip
+              label="Active"
+              sx={{
+                background: "rgba(20, 184, 166, 0.2)",
+                color: "#14b8a6",
+                fontWeight: 600,
+                height: 28,
+              }}
+            />
+            <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+              {poll.end_date ? `Ends: ${new Date(poll.end_date).toLocaleDateString()}` : ""}
+            </Typography>
+          </Stack>
 
-        {poll.options?.map((opt: Option) => (
-          <Button
-            key={opt.id}
-            sx={{ mr: 1, mt: 2 }}
-            variant="outlined"
-            onClick={() => vote(poll.contract_poll_id, opt.index)}
-          >
-            {opt.label}
-          </Button>
-        ))}
+          <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, color: "#fff" }}>
+            {poll.title}
+          </Typography>
 
-        <VoteProgressBar
-          contract={contract}
-          pollId={poll.contract_poll_id}
-          options={poll.options}
-        />
-      </CardContent>
-    </Card>
+          {poll.description && (
+            <Typography variant="body2" sx={{ mb: 3, color: "rgba(255,255,255,0.7)" }}>
+              {poll.description}
+            </Typography>
+          )}
+
+          {!voted && poll.options?.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1.5, color: "rgba(255,255,255,0.8)" }}>
+                Choose your option:
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                {poll.options.map((opt: Option) => (
+                  <Button
+                    key={opt.id}
+                    onClick={() => handleVote(opt.index)}
+                    variant="outlined"
+                    sx={{
+                      px: 3,
+                      py: 1,
+                      borderRadius: "50px",
+                      border: "1px solid rgba(99, 102, 241, 0.4)",
+                      color: "#6366f1",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        background: "rgba(99, 102, 241, 0.1)",
+                        border: "1px solid #6366f1",
+                      },
+                    }}
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {voted && (
+            <Alert severity="success" sx={{ mb: 3 }}>
+              ✅ You have voted! Check the results below.
+            </Alert>
+          )}
+
+          {poll.options?.length > 0 && (
+            <VoteProgressBar
+              contract={contract}
+              pollId={poll.id}
+              options={poll.options}
+              refreshSignal={refreshSignal}
+            />
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
-// Poll List
-function PollList({ polls, vote, contract }: any) {
+// Active Polls Section
+function ActivePollsSection({
+  polls,
+  vote,
+  contract,
+  loading,
+}: {
+  polls: any[];
+  vote: any;
+  contract: any;
+  loading: boolean;
+}) {
+  // Filter active polls (assuming status === "active")
+  const activePolls = polls.filter((poll) => poll.status === "ACTIVE");
+
+  if (loading) {
+    return <p>Loading active polls...</p>;
+  }
+
+  if (activePolls.length === 0) {
+    return <p>No active polls available.</p>;
+  }
+  if (loading) {
+    return (
+      <Box textAlign="center" py={10}>
+        <CircularProgress sx={{ color: "#6366f1" }} />
+        <Typography variant="body1" sx={{ mt: 2, color: "rgba(255,255,255,0.7)" }}>
+          Loading polls...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (polls.length === 0) {
+    return (
+      <Paper
+        sx={{
+          p: 8,
+          textAlign: "center",
+          background: "rgba(17, 24, 39, 0.4)",
+          border: "1px solid rgba(99, 102, 241, 0.2)",
+          borderRadius: "20px",
+        }}
+      >
+        <Typography variant="h6" sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
+          📭 No active polls available
+        </Typography>
+        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.5)" }}>
+          Check back later for new polls!
+        </Typography>
+      </Paper>
+    );
+  }
+
   return (
-    <>
-      {polls.map((poll: any) => (
+    <Stack spacing={3}>
+      {polls.map((poll) => (
         <PollCard key={poll.id} poll={poll} vote={vote} contract={contract} />
       ))}
-    </>
+    </Stack>
   );
 }
 
-// Vote History
-function VoteHistory() {
-  const [history, setHistory] = useState<any[]>([]);
+// My Votes Section
+function MyVotesSection({ voteHistory, wallet }: { voteHistory: any[]; wallet: string | null }) {
+  if (!wallet) {
+    return (
+      <Paper
+        sx={{
+          p: 8,
+          textAlign: "center",
+          background: "rgba(17, 24, 39, 0.4)",
+          border: "1px solid rgba(99, 102, 241, 0.2)",
+          borderRadius: "20px",
+        }}
+      >
+        <Typography variant="h6" sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
+          🔐 Connect your wallet to view votes
+        </Typography>
+      </Paper>
+    );
+  }
+
+  if (voteHistory.length === 0) {
+    return (
+      <Paper
+        sx={{
+          p: 8,
+          textAlign: "center",
+          background: "rgba(17, 24, 39, 0.4)",
+          border: "1px solid rgba(99, 102, 241, 0.2)",
+          borderRadius: "20px",
+        }}
+      >
+        <Typography variant="h6" sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
+          🧾 No votes yet
+        </Typography>
+        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.5)" }}>
+          Start voting in active polls to see your history here!
+        </Typography>
+      </Paper>
+    );
+  }
+
+  return (
+    <Stack spacing={2}>
+      {voteHistory.map((vote: any, index: number) => (
+        <motion.div
+          key={vote.id || index}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: index * 0.1 }}
+        >
+          <Card
+            sx={{
+              background: "rgba(17, 24, 39, 0.6)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(20, 184, 166, 0.3)",
+              borderRadius: "15px",
+              overflow: "hidden",
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Stack direction="row" spacing={2} sx={{ mb: 1, alignItems: "center" }}>
+                <Chip
+                  label="Voted"
+                  sx={{
+                    background: "rgba(20, 184, 166, 0.2)",
+                    color: "#14b8a6",
+                    fontWeight: 600,
+                    height: 28,
+                  }}
+                />
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                  {vote.voted_at ? new Date(vote.voted_at).toLocaleString() : ""}
+                </Typography>
+              </Stack>
+              <Typography variant="body1" sx={{ mb: 0.5, color: "#fff" }}>
+                <strong>Poll ID:</strong> {vote.poll_id}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 0.5, color: "#fff" }}>
+                <strong>Option:</strong> {vote.option_label || `Index ${vote.option_index}`}
+              </Typography>
+              {vote.tx_hash && (
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                  <strong>Transaction:</strong> {vote.tx_hash.substring(0, 10)}...{vote.tx_hash.substring(vote.tx_hash.length - 8)}
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
+    </Stack>
+  );
+}
+
+// Results Section
+function ResultsSection({ polls, contract, loading }: { polls: any[]; contract: any; loading: boolean }) {
+  const [results, setResults] = useState<any[]>([]);
 
   useEffect(() => {
-    import("../../api/studentApi").then(({ getVoteHistoryAPI }) => {
-      getVoteHistoryAPI().then((res) => setHistory(res.data));
-    });
-  }, []);
+    const loadResults = async () => {
+      if (!contract || !polls.length) return;
+
+      const allResults: any[] = [];
+      for (const poll of polls) {
+        try {
+          const pollResults = {
+            poll,
+            counts: [] as number[],
+            total: 0,
+          };
+
+          for (const opt of poll.options) {
+            const count = await contract.voteCounts(poll.contract_poll_id, opt.index);
+            pollResults.counts.push(Number(count));
+            pollResults.total += Number(count);
+          }
+
+          allResults.push(pollResults);
+        } catch (error) {
+          console.error(`Failed to load results for poll ${poll.id}:`, error);
+        }
+      }
+
+      setResults(allResults);
+    };
+
+    loadResults();
+  }, [polls, contract]);
+
+  if (loading) {
+    return (
+      <Box textAlign="center" py={10}>
+        <CircularProgress sx={{ color: "#6366f1" }} />
+        <Typography variant="body1" sx={{ mt: 2, color: "rgba(255,255,255,0.7)" }}>
+          Loading results...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (results.length === 0) {
+    return (
+      <Paper
+        sx={{
+          p: 8,
+          textAlign: "center",
+          background: "rgba(17, 24, 39, 0.4)",
+          border: "1px solid rgba(99, 102, 241, 0.2)",
+          borderRadius: "20px",
+        }}
+      >
+        <Typography variant="h6" sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
+          📊 No results available yet
+        </Typography>
+        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.5)" }}>
+          Results will appear once students start voting!
+        </Typography>
+      </Paper>
+    );
+  }
 
   return (
-    <Box mt={5}>
-      <Typography variant="h5">🧾 My Vote History</Typography>
-
-      {history.length === 0 ? (
-        <Typography>No votes yet.</Typography>
-      ) : (
-        history.map((item) => (
-          <Box
-            key={item.id}
-            p={2}
-            mt={2}
-            border="1px solid #ddd"
-            borderRadius={2}
+    <Stack spacing={3}>
+      {results.map((result, index) => (
+        <motion.div
+          key={result.poll.id || index}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: index * 0.1 }}
+        >
+          <Card
+            sx={{
+              background: "rgba(17, 24, 39, 0.6)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(99, 102, 241, 0.2)",
+              borderRadius: "20px",
+              overflow: "hidden",
+            }}
           >
-            <Typography>Poll ID: {item.poll_id}</Typography>
-            <Typography>Option Index: {item.option_index}</Typography>
-            <Typography variant="caption">Tx: {item.tx_hash}</Typography>
-          </Box>
-        ))
-      )}
-    </Box>
+            <CardContent sx={{ p: 4 }}>
+              <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center" }}>
+                <Chip
+                  label="Results"
+                  sx={{
+                    background: "rgba(99, 102, 241, 0.2)",
+                    color: "#6366f1",
+                    fontWeight: 600,
+                    height: 28,
+                  }}
+                />
+                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                  Total Votes: {result.total}
+                </Typography>
+              </Stack>
+
+              <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: "#fff" }}>
+                {result.poll.title}
+              </Typography>
+
+              {result.poll.options?.map((opt: Option, idx: number) => {
+                const percentage = result.total === 0 ? 0 : (result.counts[idx] / result.total) * 100;
+                return (
+                  <Box key={opt.id} mb={2}>
+                    <Stack direction="row" spacing={2} sx={{ mb: 0.5, alignItems: "center" }}>
+                      <Typography variant="body2" sx={{ width: 120, color: "rgba(255,255,255,0.8)" }}>
+                        {opt.label}
+                      </Typography>
+                      <Box sx={{ flex: 1, background: "rgba(255,255,255,0.1)", borderRadius: 2, height: 12, overflow: "hidden" }}>
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          transition={{ duration: 0.6, ease: "easeOut" }}
+                          style={{
+                            height: "100%",
+                            background: `linear-gradient(90deg, #6366f1, #14b8a6)`,
+                            borderRadius: 8,
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="body2" sx={{ width: 80, textAlign: "right", color: "rgba(255,255,255,0.8)" }}>
+                        {percentage.toFixed(1)}%
+                      </Typography>
+                    </Stack>
+                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                      {result.counts[idx]} votes
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
+    </Stack>
   );
 }
 
-// Analytics Chart
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid
-} from "recharts";
-
-function AnalyticsChart({ voteHistory }: { voteHistory: any[] }) {
-  const grouped: any = {};
-  voteHistory.forEach((item) => {
-    grouped[item.poll_id] = (grouped[item.poll_id] || 0) + 1;
-  });
-
-  const data = Object.keys(grouped).map((key) => ({
-    poll: key,
-    votes: grouped[key]
-  }));
-
+// Welcome Section for not connected users
+function WelcomeSection({ onConnect, isConnecting }: { onConnect: () => void; isConnecting: boolean }) {
   return (
-    <Box mt={5}>
-      <Typography variant="h5">📊 Participation Analytics</Typography>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "60vh",
+        textAlign: "center",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Box
+          sx={{
+            width: 120,
+            height: 120,
+            borderRadius: "30px",
+            background: "linear-gradient(135deg, #6366f1, #14b8a6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            mb: 4,
+            mx: "auto",
+            boxShadow: "0 0 60px rgba(99, 102, 241, 0.4)",
+          }}
+        >
+          <Typography variant="h2">🎓</Typography>
+        </Box>
 
-      {data.length === 0 ? (
-        <Typography>No analytics yet.</Typography>
-      ) : (
-        <BarChart width={500} height={300} data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="poll" />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey="votes" fill="#6366f1" />
-        </BarChart>
-      )}
+        <Typography
+          variant="h3"
+          fontWeight="bold"
+          sx={{
+            mb: 2,
+            background: "linear-gradient(135deg, #6366f1, #14b8a6)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          Welcome to DecentraPoll
+        </Typography>
+
+        <Typography
+          variant="h6"
+          sx={{ mb: 4, color: "rgba(255,255,255,0.7)", maxWidth: 500, mx: "auto" }}
+        >
+          Connect your wallet to participate in decentralized voting and make your voice heard!
+        </Typography>
+
+        <Button
+          variant="contained"
+          onClick={onConnect}
+          disabled={isConnecting}
+          size="large"
+          sx={{
+            px: 6,
+            py: 2,
+            borderRadius: "50px",
+            background: "linear-gradient(135deg, #6366f1, #14b8a6)",
+            fontWeight: 700,
+            fontSize: "1.1rem",
+            boxShadow: "0 0 40px rgba(99, 102, 241, 0.5)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #5858d6, #10a89f)",
+              boxShadow: "0 0 60px rgba(99, 102, 241, 0.7)",
+              transform: "translateY(-2px)",
+            },
+            "&:disabled": {
+              background: "linear-gradient(135deg, #6366f1, #14b8a6)",
+              opacity: 0.7,
+            },
+            transition: "all 0.3s ease",
+          }}
+        >
+          {isConnecting ? (
+            <>
+              <CircularProgress size={24} sx={{ color: "white", mr: 2 }} />
+              Connecting & Binding Wallet...
+            </>
+          ) : (
+            "🔐 Connect Wallet to Get Started"
+          )}
+        </Button>
+
+        <Stack direction="row" spacing={4} sx={{ mt: 6, justifyContent: "center" }}>
+          {[
+            { icon: "🗳️", label: "Vote Securely" },
+            { icon: "🔗", label: "Blockchain Verified" },
+            { icon: "📊", label: "Real-time Results" },
+          ].map((item) => (
+            <Box key={item.label} sx={{ textAlign: "center" }}>
+              <Typography variant="h4" sx={{ mb: 1 }}>
+                {item.icon}
+              </Typography>
+              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)" }}>
+                {item.label}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+      </motion.div>
     </Box>
   );
 }
 
 // Student Dashboard
 export default function StudentDashboard() {
-  const { wallet, contract, connectWallet, bindWallet } = useWallet();
+  const navigate = useNavigate();
+  const { wallet, contract, connectWallet, isConnecting, isCheckingWallet } = useWallet();
   const { polls, loading } = usePollsApi();
   const { voteHistory } = useVoteHistory(contract, wallet);
+
+  const [activeTab, setActiveTab] = useState("active-polls");
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  // Pass both contract and signer to useVote hook
   const { vote } = useVote(contract);
 
-  if (!wallet) return <WalletGate connectWallet={connectWallet} />;
+  const handleProfileClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
 
-  if (!contract)
+  const handleProfileClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfileSettings = () => {
+    handleProfileClose();
+    navigate("/profile");
+  };
+
+  const handleLogout = () => {
+    handleProfileClose();
+    // Clear wallet and redirect
+    localStorage.removeItem("wallet");
+    window.location.reload();
+  };
+
+  if (isCheckingWallet) {
+  return (
+    <Container maxWidth="xl" sx={{ py: 6 }}>
+      {/* Header Skeleton */}
+      <Skeleton variant="text" width="40%" height={50} sx={{ mb: 1 }} />
+      <Skeleton variant="text" width="60%" height={30} sx={{ mb: 3 }} />
+
+      {/* Wallet Chip Skeleton */}
+      <Skeleton
+        variant="rounded"
+        width={260}
+        height={40}
+        sx={{ mb: 4, borderRadius: "20px" }}
+      />
+
+      {/* Tabs and Section Title */}
+      <Skeleton variant="text" width={200} height={40} sx={{ mb: 3 }} />
+
+      {/* Poll Cards Skeleton */}
+      {[1, 2, 3].map((item) => (
+        <Box
+          key={item}
+          sx={{
+            mb: 3,
+            p: 3,
+            borderRadius: 3,
+            background: "rgba(255,255,255,0.05)",
+          }}
+        >
+          <Skeleton variant="text" width="50%" height={30} sx={{ mb: 1 }} />
+          <Skeleton variant="text" width="80%" height={20} sx={{ mb: 2 }} />
+
+          {/* Options buttons */}
+          {[1, 2, 3].map((btn) => (
+            <Skeleton
+              key={btn}
+              variant="rounded"
+              height={40}
+              sx={{ mb: 1, borderRadius: "10px" }}
+            />
+          ))}
+        </Box>
+      ))}
+    </Container>
+  );
+}
+
+  // Loading Contract (only when wallet is connected)
+  if (wallet && !contract) {
     return (
-      <Box textAlign="center" mt={10}>
-        <CircularProgress />
-        <Typography>Loading Blockchain...</Typography>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          background:
+            "radial-gradient(circle at 20% 20%, #1e293b 0%, #0b1120 45%, #020617 100%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Box textAlign="center">
+          <CircularProgress sx={{ color: "#6366f1" }} />
+          <Typography variant="h6" sx={{ mt: 3, color: "rgba(255,255,255,0.8)" }}>
+            Loading Blockchain...
+          </Typography>
+        </Box>
       </Box>
     );
-
-  if (loading)
-    return (
-      <Box textAlign="center" mt={10}>
-        <CircularProgress />
-        <Typography>Loading Polls...</Typography>
-      </Box>
-    );
+  }
 
   return (
-    <Container sx={{ mt: 5 }}>
-      <Typography variant="h4" mb={3}>
-        🎓 Student Dashboard
-      </Typography>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background:
+          "radial-gradient(circle at 20% 20%, #1e293b 0%, #0b1120 45%, #020617 100%)",
+        color: "white",
+      }}
+    >
+      <DashboardNavbar
+        wallet={wallet}
+        onConnect={connectWallet}
+        isConnecting={isConnecting}
+        onProfileClick={handleProfileClick}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
 
-      <Typography variant="body1">Wallet: {wallet}</Typography>
+      {/* Profile Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleProfileClose}
+        sx={{
+          "& .MuiPaper-root": {
+            background: "rgba(17, 24, 39, 0.95)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(99, 102, 241, 0.3)",
+            borderRadius: "15px",
+            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
+          },
+        }}
+      >
+        <Box sx={{ p: 2, borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+          <Typography variant="subtitle2" sx={{ color: "rgba(255,255,255,0.7)" }}>
+            Connected Wallet
+          </Typography>
+          <Typography variant="body2" sx={{ color: "#fff", fontFamily: "monospace" }}>
+            {wallet?.substring(0, 6)}...{wallet?.substring(wallet.length - 4)}
+          </Typography>
+        </Box>
+        <MenuItem onClick={handleProfileSettings} sx={{ px: 3, py: 1.5 }}>
+          <Typography variant="body2">⚙️ Profile Settings</Typography>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleLogout} sx={{ px: 3, py: 1.5, color: "#ef4444" }}>
+          <Typography variant="body2">🚪 Logout</Typography>
+        </MenuItem>
+      </Menu>
 
-      <Button variant="contained" sx={{ mt: 2 }} onClick={bindWallet}>
-        🔐 Bind Wallet To Account
-      </Button>
+      <Container maxWidth="xl" sx={{ py: 6 }}>
+        {/* Show welcome section if wallet not connected */}
+        {!wallet ? (
+          <WelcomeSection onConnect={connectWallet} isConnecting={isConnecting} />
+        ) : (
+          <>
+            {/* Welcome Message */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
+                🎓 Welcome back, Student!
+              </Typography>
+              <Typography variant="body1" sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
+                Manage your votes and track poll results
+              </Typography>
+            </motion.div>
 
-      <PollList polls={polls} vote={vote} contract={contract} />
+            {/* Connected wallet indicator */}
+            <Chip
+              label={`✅ Wallet Connected: ${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)}`}
+              sx={{
+                background: "rgba(20, 184, 166, 0.2)",
+                color: "#14b8a6",
+                fontWeight: 600,
+                mb: 1.5,
+              }}
+            />
 
-      <VoteHistory />
+            {/* Section Content */}
+            <Box sx={{ mt: 5 }}>
+              <AnimatePresence mode="wait">
+                {activeTab === "active-polls" && (
+                  <motion.div
+                    key="active-polls"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
+                      📊 Active Polls
+                    </Typography>
+                    <ActivePollsSection polls={polls} vote={vote} contract={contract} loading={loading} />
+                  </motion.div>
+                )}
 
-      <AnalyticsChart voteHistory={voteHistory} />
-    </Container>
+                {activeTab === "my-votes" && (
+                  <motion.div
+                    key="my-votes"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
+                      🗳️ My Votes
+                    </Typography>
+                    <MyVotesSection voteHistory={voteHistory} wallet={wallet} />
+                  </motion.div>
+                )}
+
+                {activeTab === "results" && (
+                  <motion.div
+                    key="results"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
+                      📈 Results
+                    </Typography>
+                    <ResultsSection polls={polls} contract={contract} loading={loading} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Box>
+          </>
+        )}
+      </Container>
+    </Box>
   );
 }

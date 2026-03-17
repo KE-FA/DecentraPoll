@@ -100,16 +100,28 @@ export const createPoll = async (req: Request, res: Response) => {
   }
 };
 
-// Get all active polls
+// Get Active Polls
 export const getActivePolls = async (_req: Request, res: Response) => {
   try {
-    const polls = await client.poll.findMany({
+    const now = new Date();
+
+    // Step 1: Mark all polls with past deadlines as ENDED
+    await client.poll.updateMany({
+      where: {
+        status: PollStatus.ACTIVE,
+        deadline: { lte: now },
+      },
+      data: { status: PollStatus.ENDED },
+    });
+
+    // Step 2: Fetch all still active polls
+    const activePolls = await client.poll.findMany({
       where: { status: PollStatus.ACTIVE },
       include: { options: true },
       orderBy: { createdAt: "desc" },
     });
 
-    res.json(polls);
+    res.json(activePolls);
   } catch (err) {
     console.error("Failed to fetch active polls:", err);
     res.status(500).json({ error: "Failed to fetch active polls" });

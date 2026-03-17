@@ -5,30 +5,33 @@ import "./App.css"
 import StudentDashboard from "../src/pages/student/StudentDashboard";
 // import AdminDashboard from "../src/pages/AdminDashboard";
 import Protected from "./components/Protected";
+import { Toaster } from "react-hot-toast";
+
 
 
 function App() {
   return (
+    <>
+      <Toaster position="top-center" />
 
+      <Routes>
+        {/* Public route */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
 
-    <Routes>
-      {/* Public route */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
+        {/* User-only route */}
+        <Route
+          path="/studentDashboard"
+          element={
+            <Protected requireRole="STUDENT">
+              <StudentDashboard />
+            </Protected>
+          }
+        />
 
-      {/* User-only route */}
-      <Route
-              path="/studentDashboard"
-              element={
-                <Protected requireRole="STUDENT">
-                  <StudentDashboard />
-                </Protected>
-              }
-            />
-
-      {/* Admin-only route */}
-      {/* <Route path="/admin" element={<AdminLogin />} /> */}
-      {/* <Route
+        {/* Admin-only route */}
+        {/* <Route path="/admin" element={<AdminLogin />} /> */}
+        {/* <Route
               path="/admin"
               element={
                 <Protected requireRole="ADMIN">
@@ -36,7 +39,11 @@ function App() {
                 </Protected>
               }
             /> */}
-    </Routes>
+      </Routes>
+
+    </>
+
+
 
   );
 }

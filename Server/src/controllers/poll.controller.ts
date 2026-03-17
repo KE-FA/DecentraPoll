@@ -53,31 +53,31 @@ export const getAllPolls = async (_req: Request, res: Response) => {
   }
 };
 
-export const getActivePolls = async (req: Request, res: Response) => {
-  const polls = await prisma.poll.findMany({
-    where: { status: "ACTIVE" }
-  });
+// export const getActivePolls = async (req: Request, res: Response) => {
+//   const polls = await prisma.poll.findMany({
+//     where: { status: "ACTIVE" }
+//   });
 
-  res.json(polls);
-};
+//   res.json(polls);
+// };
 
-export const getPollById = async (req: Request, res: Response) => {
-  try {
-    const pollId = Number(req.params.id); 
-    if (isNaN(pollId)) {
-      return res.status(400).json({ error: "Invalid poll ID" });
-    }
+// export const getPollById = async (req: Request, res: Response) => {
+//   try {
+//     const pollId = Number(req.params.id); 
+//     if (isNaN(pollId)) {
+//       return res.status(400).json({ error: "Invalid poll ID" });
+//     }
 
-    const poll = await prisma.poll.findUnique({
-      where: { id: pollId },
-      include: { options: true, voteHistory: true }
-    });
+//     const poll = await prisma.poll.findUnique({
+//       where: { id: pollId },
+//       include: { options: true, voteHistory: true }
+//     });
 
-    if (!poll) return res.status(404).json({ error: "Poll not found" });
+//     if (!poll) return res.status(404).json({ error: "Poll not found" });
 
-    res.json(poll);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch poll" });
-  }
-};
+//     res.json(poll);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Failed to fetch poll" });
+//   }
+// };

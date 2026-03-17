@@ -8,7 +8,7 @@ export function usePollsApi() {
   useEffect(() => {
     async function fetchPolls() {
       try {
-        const res = await axiosInstance.get("/api/polls"); 
+        const res = await axiosInstance.get("/api/polls/active"); 
         setPolls(res.data);
       } catch (err) {
         console.error("Failed to fetch polls", err);
