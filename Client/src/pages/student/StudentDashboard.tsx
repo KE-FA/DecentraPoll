@@ -824,11 +824,14 @@ export default function StudentDashboard() {
   };
 
   const handleLogout = () => {
-    handleProfileClose();
-    // Clear wallet and redirect
-    localStorage.removeItem("wallet");
-    window.location.reload();
-  };
+  handleProfileClose();
+
+  // Clear wallet in localStorage
+  localStorage.removeItem("wallet");
+
+  // Redirect to home page
+  navigate("/");
+};
 
   if (isCheckingWallet) {
   return (
