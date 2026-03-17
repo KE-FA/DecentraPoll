@@ -273,7 +273,7 @@ function VoteProgressBar({
 }
 
 // Poll Card
-function PollCard({ poll, vote, contract }: { poll: any; vote: any; contract: any }) {
+function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; contract: any; timeLeft: any }) {
   const [voted, setVoted] = useState(false);
   const [refreshSignal, setRefreshSignal] = useState(0);
 
@@ -318,6 +318,13 @@ function PollCard({ poll, vote, contract }: { poll: any; vote: any; contract: an
                 height: 28,
               }}
             />
+            <Chip
+              label={
+                !timeLeft
+                  ? "⏰ Ended"
+                  : `⏳ ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`
+              }
+            />
             <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
               {poll.end_date ? `Ends: ${new Date(poll.end_date).toLocaleDateString()}` : ""}
             </Typography>
@@ -344,6 +351,7 @@ function PollCard({ poll, vote, contract }: { poll: any; vote: any; contract: an
                     key={opt.id}
                     onClick={() => handleVote(opt.index)}
                     variant="outlined"
+                    disabled={!timeLeft}
                     sx={{
                       px: 3,
                       py: 1,
@@ -368,17 +376,23 @@ function PollCard({ poll, vote, contract }: { poll: any; vote: any; contract: an
 
           {voted && (
             <Alert severity="success" sx={{ mb: 3 }}>
-              ✅ You have voted! Check the results below.
+              You have voted! Check the results below.
             </Alert>
           )}
 
-          {poll.options?.length > 0 && (
+          {!voted && timeLeft && poll.options?.length > 0 && (
             <VoteProgressBar
               contract={contract}
               pollId={poll.id}
               options={poll.options}
               refreshSignal={refreshSignal}
             />
+          )}
+
+          {!timeLeft && (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              ⏰ This poll has ended. Voting is closed.
+            </Alert>
           )}
         </CardContent>
       </Card>
@@ -387,6 +401,22 @@ function PollCard({ poll, vote, contract }: { poll: any; vote: any; contract: an
 }
 
 // Active Polls Section
+
+// Helper to calculate time left
+function getTimeLeft(deadline: string) {
+  const now = new Date().getTime();
+  const end = new Date(deadline).getTime();
+  const diff = end - now;
+
+  if (diff <= 0) return null; // poll ended
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  return { hours, minutes, seconds };
+}
+
 function ActivePollsSection({
   polls,
   vote,
@@ -398,8 +428,28 @@ function ActivePollsSection({
   contract: any;
   loading: boolean;
 }) {
-  // Filter active polls (assuming status === "active")
+  // Filter active polls
   const activePolls = polls.filter((poll) => poll.status === "ACTIVE");
+
+  // 🧠 Countdown state
+  const [timeLeftMap, setTimeLeftMap] = useState<Record<string, any>>({});
+
+  // ⏳ Update countdown every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const map: Record<string, any> = {};
+
+      polls.forEach((poll) => {
+        if (poll.status === "ACTIVE") {
+          map[poll.id] = getTimeLeft(poll.deadline);
+        }
+      });
+
+      setTimeLeftMap(map);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [polls]);
 
   if (loading) {
     return <p>Loading active polls...</p>;
@@ -408,6 +458,7 @@ function ActivePollsSection({
   if (activePolls.length === 0) {
     return <p>No active polls available.</p>;
   }
+
   if (loading) {
     return (
       <Box textAlign="center" py={10}>
@@ -443,7 +494,13 @@ function ActivePollsSection({
   return (
     <Stack spacing={3}>
       {polls.map((poll) => (
-        <PollCard key={poll.id} poll={poll} vote={vote} contract={contract} />
+        <PollCard
+          key={poll.id}
+          poll={poll}
+          vote={vote}
+          contract={contract}
+          timeLeft={timeLeftMap[poll.id]}
+        />
       ))}
     </Stack>
   );
@@ -824,61 +881,61 @@ export default function StudentDashboard() {
   };
 
   const handleLogout = () => {
-  handleProfileClose();
+    handleProfileClose();
 
-  // Clear wallet in localStorage
-  localStorage.removeItem("wallet");
+    // Clear wallet in localStorage
+    localStorage.removeItem("wallet");
 
-  // Redirect to home page
-  navigate("/");
-};
+    // Redirect to home page
+    navigate("/");
+  };
 
   if (isCheckingWallet) {
-  return (
-    <Container maxWidth="xl" sx={{ py: 6 }}>
-      {/* Header Skeleton */}
-      <Skeleton variant="text" width="40%" height={50} sx={{ mb: 1 }} />
-      <Skeleton variant="text" width="60%" height={30} sx={{ mb: 3 }} />
+    return (
+      <Container maxWidth="xl" sx={{ py: 6 }}>
+        {/* Header Skeleton */}
+        <Skeleton variant="text" width="40%" height={50} sx={{ mb: 1 }} />
+        <Skeleton variant="text" width="60%" height={30} sx={{ mb: 3 }} />
 
-      {/* Wallet Chip Skeleton */}
-      <Skeleton
-        variant="rounded"
-        width={260}
-        height={40}
-        sx={{ mb: 4, borderRadius: "20px" }}
-      />
+        {/* Wallet Chip Skeleton */}
+        <Skeleton
+          variant="rounded"
+          width={260}
+          height={40}
+          sx={{ mb: 4, borderRadius: "20px" }}
+        />
 
-      {/* Tabs and Section Title */}
-      <Skeleton variant="text" width={200} height={40} sx={{ mb: 3 }} />
+        {/* Tabs and Section Title */}
+        <Skeleton variant="text" width={200} height={40} sx={{ mb: 3 }} />
 
-      {/* Poll Cards Skeleton */}
-      {[1, 2, 3].map((item) => (
-        <Box
-          key={item}
-          sx={{
-            mb: 3,
-            p: 3,
-            borderRadius: 3,
-            background: "rgba(255,255,255,0.05)",
-          }}
-        >
-          <Skeleton variant="text" width="50%" height={30} sx={{ mb: 1 }} />
-          <Skeleton variant="text" width="80%" height={20} sx={{ mb: 2 }} />
+        {/* Poll Cards Skeleton */}
+        {[1, 2, 3].map((item) => (
+          <Box
+            key={item}
+            sx={{
+              mb: 3,
+              p: 3,
+              borderRadius: 3,
+              background: "rgba(255,255,255,0.05)",
+            }}
+          >
+            <Skeleton variant="text" width="50%" height={30} sx={{ mb: 1 }} />
+            <Skeleton variant="text" width="80%" height={20} sx={{ mb: 2 }} />
 
-          {/* Options buttons */}
-          {[1, 2, 3].map((btn) => (
-            <Skeleton
-              key={btn}
-              variant="rounded"
-              height={40}
-              sx={{ mb: 1, borderRadius: "10px" }}
-            />
-          ))}
-        </Box>
-      ))}
-    </Container>
-  );
-}
+            {/* Options buttons */}
+            {[1, 2, 3].map((btn) => (
+              <Skeleton
+                key={btn}
+                variant="rounded"
+                height={40}
+                sx={{ mb: 1, borderRadius: "10px" }}
+              />
+            ))}
+          </Box>
+        ))}
+      </Container>
+    );
+  }
 
   // Loading Contract (only when wallet is connected)
   if (wallet && !contract) {
