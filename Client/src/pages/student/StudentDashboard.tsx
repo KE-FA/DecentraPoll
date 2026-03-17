@@ -589,18 +589,18 @@ function MyVotesSection({ voteHistory, wallet }: { voteHistory: any[]; wallet: s
                   }}
                 />
                 <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                  {vote.voted_at ? new Date(vote.voted_at).toLocaleString() : ""}
+                  {vote.votedAt ? new Date(vote.votedAt).toLocaleString() : ""}
                 </Typography>
               </Stack>
               <Typography variant="body1" sx={{ mb: 0.5, color: "#fff" }}>
-                <strong>Poll ID:</strong> {vote.poll_id}
+                <strong>Poll ID:</strong> {vote.pollId}
               </Typography>
               <Typography variant="body1" sx={{ mb: 0.5, color: "#fff" }}>
-                <strong>Option:</strong> {vote.option_label || `Index ${vote.option_index}`}
+                <strong>Option:</strong> {vote.optionLabel || `Index ${vote.optionIndex}`}
               </Typography>
-              {vote.tx_hash && (
+              {vote.txHash && (
                 <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                  <strong>Transaction:</strong> {vote.tx_hash.substring(0, 10)}...{vote.tx_hash.substring(vote.tx_hash.length - 8)}
+                  <strong>Transaction:</strong> {vote.txHash.substring(0, 10)}...{vote.txHash.substring(vote.txHash.length - 8)}
                 </Typography>
               )}
             </CardContent>

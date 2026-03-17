@@ -39,14 +39,19 @@ export const recordVote = async (req: Request, res: Response) => {
 
     // Send vote to blockchain
     const tx = await contract.vote(poll.contractPollId!, optionIndex);
-    const receipt = await tx.wait();
+    // const receipt = await tx.wait();
+    // Find correct option in DB
+    const selectedOption = poll.options.find(opt => opt.index === optionIndex);
+    if (!selectedOption) {
+      return res.status(400).json({ error: "Option not found in DB" });
+    }
 
     // Store vote history in DB
     const vote = await client.voteHistory.create({
       data: {
         userId,
         pollId,
-        optionId: poll.options[optionIndex].id,
+        optionId: selectedOption.id,
         txHash: tx.hash,
       },
     });
