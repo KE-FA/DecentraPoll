@@ -274,16 +274,28 @@ function VoteProgressBar({
 
 // Poll Card
 function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; contract: any; timeLeft: any }) {
-  const [voted, setVoted] = useState(false);
+  const [voted, setVoted] = useState(() => {
+    return localStorage.getItem(`voted_${poll.id}`) === "true";
+  });
   const [refreshSignal, setRefreshSignal] = useState(0);
+  const [isVoting, setIsVoting] = useState(false);
 
   const handleVote = async (optionIndex: number) => {
+    if (isVoting) return;
+
+    setIsVoting(true);
+
     try {
       await vote(poll.contractPollId, optionIndex);
+
+      localStorage.setItem(`voted_${poll.id}`, "true");
+
       setVoted(true);
       setRefreshSignal((prev) => prev + 1);
     } catch (error) {
       console.error("Vote failed:", error);
+    } finally {
+      setIsVoting(false);
     }
   };
 
@@ -351,7 +363,7 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
                     key={opt.id}
                     onClick={() => handleVote(opt.index)}
                     variant="outlined"
-                    disabled={!timeLeft}
+                    disabled={!timeLeft || !contract || voted || poll.contractPollId === undefined}
                     sx={{
                       px: 3,
                       py: 1,
@@ -389,11 +401,11 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
             />
           )}
 
-          {!timeLeft && (
+          {/* {!timeLeft && (
             <Alert severity="info" sx={{ mb: 3 }}>
               ⏰ This poll has ended. Voting is closed.
             </Alert>
-          )}
+          )} */}
         </CardContent>
       </Card>
     </motion.div>
@@ -431,10 +443,10 @@ function ActivePollsSection({
   // Filter active polls
   const activePolls = polls.filter((poll) => poll.status === "ACTIVE");
 
-  // 🧠 Countdown state
+  // Countdown state
   const [timeLeftMap, setTimeLeftMap] = useState<Record<string, any>>({});
 
-  // ⏳ Update countdown every second
+  // Update countdown every second
   useEffect(() => {
     const interval = setInterval(() => {
       const map: Record<string, any> = {};
@@ -617,7 +629,7 @@ function ResultsSection({ polls, contract, loading }: { polls: any[]; contract: 
           };
 
           for (const opt of poll.options) {
-            const count = await contract.voteCounts(poll.contract_poll_id, opt.index);
+            const count = await contract.voteCounts(poll.contractPollId, opt.index);
             pollResults.counts.push(Number(count));
             pollResults.total += Number(count);
           }
