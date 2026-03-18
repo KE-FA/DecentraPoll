@@ -780,7 +780,7 @@ function ResultsSection({ loading }: { loading: boolean }) {
   );
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredResults.length / RESULTS_PER_PAGE);
+  // const totalPages = Math.ceil(filteredResults.length / RESULTS_PER_PAGE);
 
   // Limit to 10 results
   const displayedResults = filteredResults.slice(
@@ -851,7 +851,7 @@ function ResultsSection({ loading }: { loading: boolean }) {
           </Typography>
         </Paper>
       ) : (
-        <>
+      
           <Stack spacing={3}>
             {displayedResults.map((poll, index) => (
               <motion.div
@@ -939,24 +939,6 @@ function ResultsSection({ loading }: { loading: boolean }) {
               </motion.div>
             ))}
           </Stack>
-
-          {/* 📄 Pagination */}
-          <Box display="flex" justifyContent="center" mt={4}>
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={(_, value) => setPage(value)}
-              sx={{
-                "& .MuiPaginationItem-root": {
-                  color: "#fff",
-                },
-                "& .Mui-selected": {
-                  backgroundColor: "#6366f1 !important",
-                },
-              }}
-            />
-          </Box>
-        </>
 
       )}
 
