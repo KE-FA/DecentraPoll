@@ -20,11 +20,11 @@ import {
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useWallet } from "../../hooks/useWallet";
-import { useVote } from "../../hooks/useVote";
-import { usePollsApi } from "../../hooks/usePollsApi";
-import { useVoteHistory } from "../../hooks/useVoteHistory";
-import axiosInstance from "../../api/axiosInstance";
+import { useWallet } from "../hooks/useWallet";
+import { useVote } from "../hooks/useVote";
+import { usePollsApi } from "../hooks/usePollsApi";
+import { useVoteHistory } from "../hooks/useVoteHistory";
+import axiosInstance from "../api/axiosInstance";
 
 // Navbar Component with integrated wallet connection
 const DashboardNavbar = ({
@@ -620,6 +620,7 @@ function MyVotesSection({ voteHistory, wallet }: { voteHistory: any[]; wallet: s
   );
 }
 
+
 // Results Section
 
 interface ResultOption {
@@ -641,9 +642,11 @@ interface PollResult {
 
 function ResultsSection({ loading }: { loading: boolean }) {
   const [results, setResults] = useState<PollResult[]>([]);
+  // const [refreshSignal, _setRefreshSignal] = useState(0);
+
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    // let interval: NodeJS.Timeout;
 
     const loadResults = async () => {
       try {
@@ -657,11 +660,11 @@ function ResultsSection({ loading }: { loading: boolean }) {
 
     loadResults();
 
-    // Autorefresh every 1s
-    interval = setInterval(loadResults, 1000);
+    // // Autorefresh every 5s
+    // interval = setInterval(loadResults, 5000);
 
-    return () => clearInterval(interval);
-  }, []);
+    // return () => clearInterval(interval);
+  }, []); // Refresh Signal
 
   if (loading) {
     return (

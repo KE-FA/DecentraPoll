@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Home from "../src/pages/Home"
 import Login from "../src/pages/Login";
 import "./App.css"
-import StudentDashboard from "../src/pages/student/StudentDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
 // import AdminDashboard from "../src/pages/AdminDashboard";
 import Protected from "./components/Protected";
 // import { Toaster } from "react-hot-toast";
