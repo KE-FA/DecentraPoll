@@ -16,8 +16,12 @@ import {
   IconButton,
   CircularProgress,
   Alert,
-  Skeleton
+  Skeleton,
+  TextField,
+  Pagination,
+  InputAdornment
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "../hooks/useWallet";
@@ -642,16 +646,16 @@ interface PollResult {
 
 function ResultsSection({ loading }: { loading: boolean }) {
   const [results, setResults] = useState<PollResult[]>([]);
-  // const [refreshSignal, _setRefreshSignal] = useState(0);
+  const [searchTerm, setSearchTerm] = useState(""); // For search input
+  const [page, setPage] = useState(1);
 
+
+  const RESULTS_PER_PAGE = 10; // Limit results shown
 
   useEffect(() => {
-    // let interval: NodeJS.Timeout;
-
     const loadResults = async () => {
       try {
         const res = await axiosInstance.get("/api/polls/results");
-        // console.log("RESULTS API:", res.data); 
         setResults(res.data);
       } catch (error) {
         console.error("Failed to load results:", error);
@@ -659,12 +663,7 @@ function ResultsSection({ loading }: { loading: boolean }) {
     };
 
     loadResults();
-
-    // // Autorefresh every 5s
-    // interval = setInterval(loadResults, 5000);
-
-    // return () => clearInterval(interval);
-  }, []); // Refresh Signal
+  }, []);
 
   if (loading) {
     return (
@@ -677,103 +676,193 @@ function ResultsSection({ loading }: { loading: boolean }) {
     );
   }
 
-  if (results.length === 0) {
-    return (
-      <Paper
-        sx={{
-          p: 8,
-          textAlign: "center",
-          background: "rgba(17, 24, 39, 0.4)",
-          border: "1px solid rgba(99, 102, 241, 0.2)",
-          borderRadius: "20px",
-        }}
-      >
-        <Typography variant="h6" sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
-          📊 No results available yet
-        </Typography>
-        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.5)" }}>
-          Results will appear once students start voting!
-        </Typography>
-      </Paper>
-    );
-  }
+  // Filter results by search term
+  const filteredResults = results.filter((poll) =>
+    poll.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredResults.length / RESULTS_PER_PAGE);
+
+  // Limit to 10 results
+  const displayedResults = filteredResults.slice(
+    (page - 1) * RESULTS_PER_PAGE,
+    page * RESULTS_PER_PAGE
+  );
 
   return (
-    <Stack spacing={3}>
-      {results.map((poll, index) => (
-        <motion.div
-          key={poll.pollId || index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
+    <Box>
+      {/* Search Bar */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search polls..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPage(1); // reset page when searching
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: "rgba(255,255,255,0.5)" }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            width: 260,
+            backdropFilter: "blur(10px)",
+            background: "rgba(17, 24, 39, 0.6)",
+            borderRadius: "12px",
+            input: {
+              color: "#fff",
+              fontSize: "0.9rem",
+            },
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              "& fieldset": {
+                borderColor: "rgba(99, 102, 241, 0.2)",
+              },
+              "&:hover fieldset": {
+                borderColor: "#6366f1",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#6366f1",
+                boxShadow: "0 0 0 1px rgba(99,102,241,0.3)",
+              },
+            },
+          }}
+        />
+      </Box>
+
+      {filteredResults.length === 0 ? (
+        <Paper
+          sx={{
+            p: 8,
+            textAlign: "center",
+            background: "rgba(17, 24, 39, 0.4)",
+            border: "1px solid rgba(99, 102, 241, 0.2)",
+            borderRadius: "20px",
+          }}
         >
-          <Card
-            sx={{
-              background: "rgba(17, 24, 39, 0.6)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(99, 102, 241, 0.2)",
-              borderRadius: "20px",
-              overflow: "hidden",
-            }}
-          >
-            <CardContent sx={{ p: 4 }}>
-              <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center" }}>
-                <Chip
-                  label="Results"
+          <Typography variant="h6" sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
+            📊 No results available
+          </Typography>
+          <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.5)" }}>
+            Results will appear once students start voting!
+          </Typography>
+        </Paper>
+      ) : (
+        <>
+          <Stack spacing={3}>
+            {displayedResults.map((poll, index) => (
+              <motion.div
+                key={poll.pollId || index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Card
                   sx={{
-                    background: "rgba(99, 102, 241, 0.2)",
-                    color: "#6366f1",
-                    fontWeight: 600,
-                    height: 28,
+                    background: "rgba(17, 24, 39, 0.6)",
+                    backdropFilter: "blur(20px)",
+                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    borderRadius: "20px",
+                    overflow: "hidden",
                   }}
-                />
-                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                  Total Votes: {poll.totalVotes}
-                </Typography>
-              </Stack>
-
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: "#fff" }}>
-                {poll.title}
-              </Typography>
-
-              {poll.results.map((opt) => {
-                const percentage =
-                  poll.totalVotes === 0
-                    ? 0
-                    : (opt.voteCount / poll.totalVotes) * 100;
-                return (
-                  <Box key={opt.optionId} mb={2}>
-                    <Stack direction="row" spacing={2} sx={{ mb: 0.5, alignItems: "center" }}>
-                      <Typography variant="body2" sx={{ width: 120, color: "rgba(255,255,255,0.8)" }}>
-                        {opt.optionLabel}
-                      </Typography>
-                      <Box sx={{ flex: 1, background: "rgba(255,255,255,0.1)", borderRadius: 2, height: 12, overflow: "hidden" }}>
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${percentage}%` }}
-                          transition={{ duration: 0.6, ease: "easeOut" }}
-                          style={{
-                            height: "100%",
-                            background: `linear-gradient(90deg, #6366f1, #14b8a6)`,
-                            borderRadius: 8,
-                          }}
-                        />
-                      </Box>
-                      <Typography variant="body2" sx={{ width: 80, textAlign: "right", color: "rgba(255,255,255,0.8)" }}>
-                        {percentage.toFixed(1)}%
+                >
+                  <CardContent sx={{ p: 4 }}>
+                    <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center" }}>
+                      <Chip
+                        label="Results"
+                        sx={{
+                          background: "rgba(99, 102, 241, 0.2)",
+                          color: "#6366f1",
+                          fontWeight: 600,
+                          height: 28,
+                        }}
+                      />
+                      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                        Total Votes: {poll.totalVotes}
                       </Typography>
                     </Stack>
-                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                      {opt.voteCount} votes
+
+                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: "#fff" }}>
+                      {poll.title}
                     </Typography>
-                  </Box>
-                );
-              })}
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))}
-    </Stack>
+
+                    {poll.results.map((opt) => {
+                      const percentage =
+                        poll.totalVotes === 0 ? 0 : (opt.voteCount / poll.totalVotes) * 100;
+                      return (
+                        <Box key={opt.optionId} mb={2}>
+                          <Stack direction="row" spacing={2} sx={{ mb: 0.5, alignItems: "center" }}>
+                            <Typography
+                              variant="body2"
+                              sx={{ width: 120, color: "rgba(255,255,255,0.8)" }}
+                            >
+                              {opt.optionLabel}
+                            </Typography>
+                            <Box
+                              sx={{
+                                flex: 1,
+                                background: "rgba(255,255,255,0.1)",
+                                borderRadius: 2,
+                                height: 12,
+                                overflow: "hidden",
+                              }}
+                            >
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${percentage}%` }}
+                                transition={{ duration: 0.6, ease: "easeOut" }}
+                                style={{
+                                  height: "100%",
+                                  background: `linear-gradient(90deg, #6366f1, #14b8a6)`,
+                                  borderRadius: 8,
+                                }}
+                              />
+                            </Box>
+                            <Typography
+                              variant="body2"
+                              sx={{ width: 80, textAlign: "right", color: "rgba(255,255,255,0.8)" }}
+                            >
+                              {percentage.toFixed(1)}%
+                            </Typography>
+                          </Stack>
+                          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                            {opt.voteCount} votes
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </Stack>
+
+          {/* 📄 Pagination */}
+          <Box display="flex" justifyContent="center" mt={4}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  color: "#fff",
+                },
+                "& .Mui-selected": {
+                  backgroundColor: "#6366f1 !important",
+                },
+              }}
+            />
+          </Box>
+        </>
+
+      )};
+
+    </Box>
   );
 }
 
@@ -1120,7 +1209,7 @@ export default function StudentDashboard() {
                     <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
                       📈 Results
                     </Typography>
-                    <ResultsSection  loading={loading} />
+                    <ResultsSection loading={loading} />
                   </motion.div>
                 )}
               </AnimatePresence>
