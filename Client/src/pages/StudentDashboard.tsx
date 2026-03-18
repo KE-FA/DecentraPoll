@@ -532,7 +532,18 @@ function ActivePollsSection({
 }
 
 // My Votes Section
-function MyVotesSection({ voteHistory, wallet }: { voteHistory: any[]; wallet: string | null }) {
+function MyVotesSection({
+  voteHistory,
+  wallet,
+}: {
+  voteHistory: any[];
+  wallet: string | null;
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+
+  const RESULTS_PER_PAGE = 10;
+
   if (!wallet) {
     return (
       <Paper
@@ -544,12 +555,27 @@ function MyVotesSection({ voteHistory, wallet }: { voteHistory: any[]; wallet: s
           borderRadius: "20px",
         }}
       >
-        <Typography variant="h6" sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
+        <Typography sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
           🔐 Connect your wallet to view votes
         </Typography>
       </Paper>
     );
   }
+
+  // Filter votes (by poll title or option)
+  const filteredVotes = voteHistory.filter((vote) =>
+    `${vote.pollTitle} ${vote.optionLabel || ""}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination
+  const totalPages = Math.ceil(filteredVotes.length / RESULTS_PER_PAGE);
+
+  const displayedVotes = filteredVotes.slice(
+    (page - 1) * RESULTS_PER_PAGE,
+    page * RESULTS_PER_PAGE
+  );
 
   if (voteHistory.length === 0) {
     return (
@@ -562,10 +588,10 @@ function MyVotesSection({ voteHistory, wallet }: { voteHistory: any[]; wallet: s
           borderRadius: "20px",
         }}
       >
-        <Typography variant="h6" sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
+        <Typography sx={{ mb: 2, color: "rgba(255,255,255,0.7)" }}>
           🧾 No votes yet
         </Typography>
-        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.5)" }}>
+        <Typography sx={{ color: "rgba(255,255,255,0.5)" }}>
           Start voting in active polls to see your history here!
         </Typography>
       </Paper>
@@ -573,57 +599,129 @@ function MyVotesSection({ voteHistory, wallet }: { voteHistory: any[]; wallet: s
   }
 
   return (
-    <Stack spacing={2}>
-      {voteHistory.map((vote: any, index: number) => (
-        <motion.div
-          key={vote.id || index}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
-        >
-          <Card
-            sx={{
-              background: "rgba(17, 24, 39, 0.6)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(20, 184, 166, 0.3)",
-              borderRadius: "15px",
-              overflow: "hidden",
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Stack direction="row" spacing={2} sx={{ mb: 1, alignItems: "center" }}>
-                <Chip
-                  label="Voted"
+    <Box>
+      {/* Search Bar */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search your votes..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPage(1); // reset page on search
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: "rgba(255,255,255,0.5)" }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            width: 260,
+            backdropFilter: "blur(10px)",
+            background: "rgba(17, 24, 39, 0.6)",
+            borderRadius: "12px",
+            input: { color: "#fff" },
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              "& fieldset": {
+                borderColor: "rgba(20, 184, 166, 0.3)",
+              },
+              "&:hover fieldset": {
+                borderColor: "#14b8a6",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#14b8a6",
+                boxShadow: "0 0 0 1px rgba(20,184,166,0.3)",
+              },
+            },
+          }}
+        />
+      </Box>
+
+      {/* Empty after filtering */}
+      {filteredVotes.length === 0 ? (
+        <Typography sx={{ textAlign: "center", color: "rgba(255,255,255,0.6)" }}>
+          No matching votes found
+        </Typography>
+      ) : (
+        <>
+          {/* Votes */}
+          <Stack spacing={2}>
+            {displayedVotes.map((vote: any, index: number) => (
+              <motion.div
+                key={vote.id || index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                <Card
                   sx={{
-                    background: "rgba(20, 184, 166, 0.2)",
-                    color: "#14b8a6",
-                    fontWeight: 600,
-                    height: 28,
+                    background: "rgba(17, 24, 39, 0.6)",
+                    backdropFilter: "blur(20px)",
+                    border: "1px solid rgba(20, 184, 166, 0.3)",
+                    borderRadius: "15px",
                   }}
-                />
-                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                  {vote.votedAt ? new Date(vote.votedAt).toLocaleString() : ""}
-                </Typography>
-              </Stack>
-              <Typography variant="body1" sx={{ mb: 0.5, color: "#fff" }}>
-                <strong>Poll Title:</strong> {vote.pollTitle}
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 0.5, color: "#fff" }}>
-                <strong>Option:</strong> {vote.optionLabel || `Index ${vote.optionIndex}`}
-              </Typography>
-              {vote.txHash && (
-                <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                  <strong>Transaction:</strong> {vote.txHash.substring(0, 10)}...{vote.txHash.substring(vote.txHash.length - 8)}
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))}
-    </Stack>
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Stack direction="row" spacing={2} sx={{ mb: 1 , alignItems:"center"  }}>
+                      <Chip
+                        label="Voted"
+                        sx={{
+                          background: "rgba(20, 184, 166, 0.2)",
+                          color: "#14b8a6",
+                        }}
+                      />
+                      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                        {vote.votedAt
+                          ? new Date(vote.votedAt).toLocaleString()
+                          : ""}
+                      </Typography>
+                    </Stack>
+
+                    <Typography sx={{ color: "#fff" }}>
+                      <strong>Poll Title:</strong> {vote.pollTitle}
+                    </Typography>
+
+                    <Typography sx={{ color: "#fff" }}>
+                      <strong>Option:</strong>{" "}
+                      {vote.optionLabel || `Index ${vote.optionIndex}`}
+                    </Typography>
+
+                    {vote.txHash && (
+                      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                        <strong>Transaction:</strong>{" "}
+                        {vote.txHash.substring(0, 10)}...
+                        {vote.txHash.substring(vote.txHash.length - 8)}
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </Stack>
+
+          {/* Pagination */}
+          <Box display="flex" justifyContent="center" mt={4}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  color: "#fff",
+                },
+                "& .Mui-selected": {
+                  backgroundColor: "#14b8a6 !important",
+                },
+              }}
+            />
+          </Box>
+        </>
+      )}
+    </Box>
   );
 }
-
 
 // Results Section
 
