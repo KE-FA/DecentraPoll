@@ -289,23 +289,22 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
 
   const handleVote = async (optionIndex: number) => {
     if (isVoting) return;
-
     setIsVoting(true);
 
     try {
-      await vote(poll.contractPollId, poll.id, optionIndex);
+      const success = await vote(poll.contractPollId, poll.id, optionIndex);
 
-      localStorage.setItem(`voted_${poll.id}`, "true");
+      if (success) {
+        localStorage.setItem(`voted_${poll.id}`, "true");
+        setVoted(true);
 
-      setVoted(true);
-
-      refetchPolls();
-      refetchHistory();
-
-
-      setRefreshSignal((prev) => prev + 1);
-    } catch (error) {
-      console.error("Vote failed:", error);
+        refetchPolls();
+        refetchHistory();
+        setRefreshSignal((prev) => prev + 1);
+      }
+      // else do nothing → keeps options visible
+    } catch (err) {
+      console.error("Unexpected vote error:", err);
     } finally {
       setIsVoting(false);
     }
@@ -376,7 +375,7 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
                     key={opt.id}
                     onClick={() => handleVote(opt.index)}
                     variant="outlined"
-                    disabled={!timeLeft || !contract || voted || poll.contractPollId === undefined}
+                    disabled={!timeLeft || !contract || isVoting || voted || poll.contractPollId === undefined}
                     sx={{
                       px: 3,
                       py: 1,
@@ -664,7 +663,7 @@ function MyVotesSection({
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
-                    <Stack direction="row" spacing={2} sx={{ mb: 1 , alignItems:"center"  }}>
+                    <Stack direction="row" spacing={2} sx={{ mb: 1, alignItems: "center" }}>
                       <Chip
                         label="Voted"
                         sx={{
@@ -851,94 +850,94 @@ function ResultsSection({ loading }: { loading: boolean }) {
           </Typography>
         </Paper>
       ) : (
-      
-          <Stack spacing={3}>
-            {displayedResults.map((poll, index) => (
-              <motion.div
-                key={poll.pollId || index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+
+        <Stack spacing={3}>
+          {displayedResults.map((poll, index) => (
+            <motion.div
+              key={poll.pollId || index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <Card
+                sx={{
+                  background: "rgba(17, 24, 39, 0.6)",
+                  backdropFilter: "blur(20px)",
+                  border: "1px solid rgba(99, 102, 241, 0.2)",
+                  borderRadius: "20px",
+                  overflow: "hidden",
+                }}
               >
-                <Card
-                  sx={{
-                    background: "rgba(17, 24, 39, 0.6)",
-                    backdropFilter: "blur(20px)",
-                    border: "1px solid rgba(99, 102, 241, 0.2)",
-                    borderRadius: "20px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <CardContent sx={{ p: 4 }}>
-                    <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center" }}>
-                      <Chip
-                        label="Results"
-                        sx={{
-                          background: "rgba(99, 102, 241, 0.2)",
-                          color: "#6366f1",
-                          fontWeight: 600,
-                          height: 28,
-                        }}
-                      />
-                      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                        Total Votes: {poll.totalVotes}
-                      </Typography>
-                    </Stack>
-
-                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: "#fff" }}>
-                      {poll.title}
+                <CardContent sx={{ p: 4 }}>
+                  <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center" }}>
+                    <Chip
+                      label="Results"
+                      sx={{
+                        background: "rgba(99, 102, 241, 0.2)",
+                        color: "#6366f1",
+                        fontWeight: 600,
+                        height: 28,
+                      }}
+                    />
+                    <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                      Total Votes: {poll.totalVotes}
                     </Typography>
+                  </Stack>
 
-                    {poll.results.map((opt) => {
-                      const percentage =
-                        poll.totalVotes === 0 ? 0 : (opt.voteCount / poll.totalVotes) * 100;
-                      return (
-                        <Box key={opt.optionId} mb={2}>
-                          <Stack direction="row" spacing={2} sx={{ mb: 0.5, alignItems: "center" }}>
-                            <Typography
-                              variant="body2"
-                              sx={{ width: 120, color: "rgba(255,255,255,0.8)" }}
-                            >
-                              {opt.optionLabel}
-                            </Typography>
-                            <Box
-                              sx={{
-                                flex: 1,
-                                background: "rgba(255,255,255,0.1)",
-                                borderRadius: 2,
-                                height: 12,
-                                overflow: "hidden",
-                              }}
-                            >
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${percentage}%` }}
-                                transition={{ duration: 0.6, ease: "easeOut" }}
-                                style={{
-                                  height: "100%",
-                                  background: `linear-gradient(90deg, #6366f1, #14b8a6)`,
-                                  borderRadius: 8,
-                                }}
-                              />
-                            </Box>
-                            <Typography
-                              variant="body2"
-                              sx={{ width: 80, textAlign: "right", color: "rgba(255,255,255,0.8)" }}
-                            >
-                              {percentage.toFixed(1)}%
-                            </Typography>
-                          </Stack>
-                          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                            {opt.voteCount} votes
+                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: "#fff" }}>
+                    {poll.title}
+                  </Typography>
+
+                  {poll.results.map((opt) => {
+                    const percentage =
+                      poll.totalVotes === 0 ? 0 : (opt.voteCount / poll.totalVotes) * 100;
+                    return (
+                      <Box key={opt.optionId} mb={2}>
+                        <Stack direction="row" spacing={2} sx={{ mb: 0.5, alignItems: "center" }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ width: 120, color: "rgba(255,255,255,0.8)" }}
+                          >
+                            {opt.optionLabel}
                           </Typography>
-                        </Box>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </Stack>
+                          <Box
+                            sx={{
+                              flex: 1,
+                              background: "rgba(255,255,255,0.1)",
+                              borderRadius: 2,
+                              height: 12,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${percentage}%` }}
+                              transition={{ duration: 0.6, ease: "easeOut" }}
+                              style={{
+                                height: "100%",
+                                background: `linear-gradient(90deg, #6366f1, #14b8a6)`,
+                                borderRadius: 8,
+                              }}
+                            />
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            sx={{ width: 80, textAlign: "right", color: "rgba(255,255,255,0.8)" }}
+                          >
+                            {percentage.toFixed(1)}%
+                          </Typography>
+                        </Stack>
+                        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+                          {opt.voteCount} votes
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </Stack>
 
       )}
 
