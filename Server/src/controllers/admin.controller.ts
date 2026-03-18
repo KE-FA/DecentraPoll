@@ -129,44 +129,44 @@ export const getActivePolls = async (_req: Request, res: Response) => {
 };
 
 // Get details of a single poll
-export const getPollDetails = async (req: Request, res: Response) => {
-  try {
-    const pollId = Number(req.params.id);
+// export const getPollDetails = async (req: Request, res: Response) => {
+//   try {
+//     const pollId = Number(req.params.id);
 
-    const poll = await client.poll.findUnique({
-      where: { id: pollId },
-      include: {
-        options: { select: { id: true, label: true, index: true } },
-        admin: { select: { id: true, regNo: true } },
-        voteHistory: { select: { id: true, userId: true, optionId: true, txHash: true, createdAt: true } }
-      }
-    });
+//     const poll = await client.poll.findUnique({
+//       where: { id: pollId },
+//       include: {
+//         options: { select: { id: true, label: true, index: true } },
+//         admin: { select: { id: true, regNo: true } },
+//         voteHistory: { select: { id: true, userId: true, optionId: true, txHash: true, createdAt: true } }
+//       }
+//     });
 
-    if (!poll) return res.status(404).json({ error: "Poll not found" });
+//     if (!poll) return res.status(404).json({ error: "Poll not found" });
 
-    // Fetch blockchain vote counts for each option
-    const optionsWithCounts = await Promise.all(
-      poll.options.map(async (opt: any) => {
-        const count = await blockchainService.getVotes(pollId, opt.index);
-        return { ...opt, voteCount: Number(count) };
-      })
-    );
+//     // Fetch blockchain vote counts for each option
+//     const optionsWithCounts = await Promise.all(
+//       poll.options.map(async (opt: any) => {
+//         const count = await blockchainService.getVotes(pollId, opt.index);
+//         return { ...opt, voteCount: Number(count) };
+//       })
+//     );
 
-    res.json({
-      id: poll.id,
-      title: poll.title,
-      description: poll.description,
-      status: poll.status,
-      deadline: poll.deadline,
-      admin: poll.admin,
-      options: optionsWithCounts,
-      voteHistory: poll.voteHistory
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch poll details" });
-  }
-};
+//     res.json({
+//       id: poll.id,
+//       title: poll.title,
+//       description: poll.description,
+//       status: poll.status,
+//       deadline: poll.deadline,
+//       admin: poll.admin,
+//       options: optionsWithCounts,
+//       voteHistory: poll.voteHistory
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Failed to fetch poll details" });
+//   }
+// };
 
 // Approve Poll
 export const approvePoll = async (req: Request, res: Response) => {

@@ -24,6 +24,7 @@ import { useWallet } from "../../hooks/useWallet";
 import { useVote } from "../../hooks/useVote";
 import { usePollsApi } from "../../hooks/usePollsApi";
 import { useVoteHistory } from "../../hooks/useVoteHistory";
+import axiosInstance from "../../api/axiosInstance";
 
 // Navbar Component with integrated wallet connection
 const DashboardNavbar = ({
@@ -296,7 +297,7 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
 
       refetchPolls();
       refetchHistory();
-      
+
 
       setRefreshSignal((prev) => prev + 1);
     } catch (error) {
@@ -341,7 +342,7 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
               label={
                 timeLeft
                   ? `⏳ ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`
-                  :  "⏰ Ended"
+                  : "⏰ Ended"
 
               }
             />
@@ -620,39 +621,47 @@ function MyVotesSection({ voteHistory, wallet }: { voteHistory: any[]; wallet: s
 }
 
 // Results Section
-function ResultsSection({ polls, contract, loading }: { polls: any[]; contract: any; loading: boolean }) {
-  const [results, setResults] = useState<any[]>([]);
+
+interface ResultOption {
+  optionId: number;
+  optionLabel: string;
+  optionIndex: number;
+  voteCount: number;
+}
+
+interface PollResult {
+  pollId: number;
+  title: string;
+  description: string;
+  status: string;
+  deadline: string;
+  results: ResultOption[];
+  totalVotes: number;
+}
+
+function ResultsSection({ loading }: { loading: boolean }) {
+  const [results, setResults] = useState<PollResult[]>([]);
 
   useEffect(() => {
+    let interval: NodeJS.Timeout;
+
     const loadResults = async () => {
-      if (!contract || !polls.length) return;
-
-      const allResults: any[] = [];
-      for (const poll of polls) {
-        try {
-          const pollResults = {
-            poll,
-            counts: [] as number[],
-            total: 0,
-          };
-
-          for (const opt of poll.options) {
-            const count = await contract.voteCounts(poll.id, opt.index);
-            pollResults.counts.push(Number(count));
-            pollResults.total += Number(count);
-          }
-
-          allResults.push(pollResults);
-        } catch (error) {
-          console.error(`Failed to load results for poll ${poll.id}:`, error);
-        }
+      try {
+        const res = await axiosInstance.get("/api/polls/results");
+        // console.log("RESULTS API:", res.data); 
+        setResults(res.data);
+      } catch (error) {
+        console.error("Failed to load results:", error);
       }
-
-      setResults(allResults);
     };
 
     loadResults();
-  }, [polls, contract]);
+
+    // Autorefresh every 5s
+    interval = setInterval(loadResults, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading) {
     return (
@@ -688,9 +697,9 @@ function ResultsSection({ polls, contract, loading }: { polls: any[]; contract: 
 
   return (
     <Stack spacing={3}>
-      {results.map((result, index) => (
+      {results.map((poll, index) => (
         <motion.div
-          key={result.poll.id || index}
+          key={poll.pollId || index}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -716,21 +725,24 @@ function ResultsSection({ polls, contract, loading }: { polls: any[]; contract: 
                   }}
                 />
                 <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                  Total Votes: {result.total}
+                  Total Votes: {poll.totalVotes}
                 </Typography>
               </Stack>
 
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: "#fff" }}>
-                {result.poll.title}
+                {poll.title}
               </Typography>
 
-              {result.poll.options?.map((opt: Option, idx: number) => {
-                const percentage = result.total === 0 ? 0 : (result.counts[idx] / result.total) * 100;
+              {poll.results.map((opt) => {
+                const percentage =
+                  poll.totalVotes === 0
+                    ? 0
+                    : (opt.voteCount / poll.totalVotes) * 100;
                 return (
-                  <Box key={opt.id} mb={2}>
+                  <Box key={opt.optionId} mb={2}>
                     <Stack direction="row" spacing={2} sx={{ mb: 0.5, alignItems: "center" }}>
                       <Typography variant="body2" sx={{ width: 120, color: "rgba(255,255,255,0.8)" }}>
-                        {opt.label}
+                        {opt.optionLabel}
                       </Typography>
                       <Box sx={{ flex: 1, background: "rgba(255,255,255,0.1)", borderRadius: 2, height: 12, overflow: "hidden" }}>
                         <motion.div
@@ -749,7 +761,7 @@ function ResultsSection({ polls, contract, loading }: { polls: any[]; contract: 
                       </Typography>
                     </Stack>
                     <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
-                      {result.counts[idx]} votes
+                      {opt.voteCount} votes
                     </Typography>
                   </Box>
                 );
@@ -1105,7 +1117,7 @@ export default function StudentDashboard() {
                     <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
                       📈 Results
                     </Typography>
-                    <ResultsSection polls={polls} contract={contract} loading={loading} />
+                    <ResultsSection  loading={loading} />
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -1,7 +1,8 @@
 import { Router } from "express";
 import {
   getAllPolls,
-  getPollResults
+  getPollResults,
+  getAllPollResults
 } from "../controllers/poll.controller";
 
 import {
@@ -10,7 +11,7 @@ import {
   rejectPoll,
   deletePoll,
   getActivePolls,
-  getPollDetails
+  // getPollDetails,
 } from "../controllers/admin.controller";
 
 import {verifyAdmin} from "../middlewares/verifyAdmin.middleware";
@@ -20,8 +21,10 @@ const router = Router();
 // Public
 router.get("/", getAllPolls);
 router.get("/active", getActivePolls);
-router.get("/:id", getPollDetails);
+// router.get("/:id", getPollDetails);
+router.get("/results", getAllPollResults);
 router.get("/:id/results", getPollResults);
+
 
 
 // Admin

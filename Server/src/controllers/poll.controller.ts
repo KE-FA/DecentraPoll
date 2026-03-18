@@ -31,12 +31,77 @@ export const getPollResults = async (req: Request, res: Response) => {
       pollId: poll.id,
       title: poll.title,
       description: poll.description,
+      status: poll.status,
       deadline: poll.deadline,
       results,
     });
   } catch (err) {
     console.error("Failed to fetch poll results:", err);
     res.status(500).json({ error: "Failed to fetch poll results" });
+  }
+};
+
+// Fetch All poll results
+export const getAllPollResults = async (req: Request, res: Response) => {
+  try {
+    // Get all polls with options
+    const polls = await prisma.poll.findMany({
+      include: { options: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const allResults = await Promise.all(
+      polls.map(async (poll) => {
+        // Skip polls not on blockchain
+        if (!poll.contractPollId) {
+          return null;
+        }
+
+        try {
+          const results = await Promise.all(
+            poll.options.map(async (option) => {
+              const votes = await blockchainService.getVotes(
+                poll.contractPollId!,
+                option.index
+              );
+
+              return {
+                optionId: option.id,
+                optionLabel: option.label,
+                optionIndex: option.index,
+                voteCount: Number(votes),
+              };
+            })
+          );
+
+          const totalVotes = results.reduce(
+            (sum, r) => sum + r.voteCount,
+            0
+          );
+
+          return {
+            pollId: poll.id,
+            title: poll.title,
+            description: poll.description,
+            status: poll.status,
+            deadline: poll.deadline,
+            results,
+            totalVotes,
+          };
+        } catch (err) {
+          console.error(`Failed for poll ${poll.id}`, err);
+          return null;
+        }
+      })
+    );
+
+    // Remove failed/null polls
+    const filteredResults = allResults.filter(Boolean);
+
+    res.json(filteredResults);
+  } catch (err) {
+    console.error("Failed to fetch all poll results:", err);
+    res.status(500).json({ error: "Failed to fetch all poll results" });
   }
 };
 
@@ -63,7 +128,7 @@ export const getAllPolls = async (_req: Request, res: Response) => {
 
 // export const getPollById = async (req: Request, res: Response) => {
 //   try {
-//     const pollId = Number(req.params.id); 
+//     const pollId = Number(req.params.id);
 //     if (isNaN(pollId)) {
 //       return res.status(400).json({ error: "Invalid poll ID" });
 //     }
