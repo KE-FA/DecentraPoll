@@ -5,14 +5,14 @@ import "./App.css"
 import StudentDashboard from "../src/pages/student/StudentDashboard";
 // import AdminDashboard from "../src/pages/AdminDashboard";
 import Protected from "./components/Protected";
-import { Toaster } from "react-hot-toast";
+// import { Toaster } from "react-hot-toast";
 
 
 
 function App() {
   return (
     <>
-      <Toaster position="top-center" />
+      {/* <Toaster position="top-center" /> */}
 
       <Routes>
         {/* Public route */}

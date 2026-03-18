@@ -205,12 +205,12 @@ type Option = {
 
 function VoteProgressBar({
   contract,
-  pollId,
+  contractPollId,
   options,
   refreshSignal,
 }: {
   contract: any;
-  pollId: number;
+  contractPollId: number;
   options: Option[];
   refreshSignal: number;
 }) {
@@ -225,7 +225,7 @@ function VoteProgressBar({
       let sum = 0;
 
       for (const opt of options) {
-        const count = await contract.voteCounts(pollId, opt.index);
+        const count = await contract.voteCounts(contractPollId, opt.index);
         const value = Number(count);
         temp.push(value);
         sum += value;
@@ -236,7 +236,7 @@ function VoteProgressBar({
     };
 
     loadVotes();
-  }, [refreshSignal, contract, options, pollId]);
+  }, [refreshSignal, contract, options, contractPollId]);
 
   return (
     <Box mt={3}>
@@ -279,6 +279,8 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
   });
   const [refreshSignal, setRefreshSignal] = useState(0);
   const [isVoting, setIsVoting] = useState(false);
+  const { refetchPolls } = usePollsApi(contract);
+  const { refetchHistory } = useVoteHistory(contract);
 
   const handleVote = async (optionIndex: number) => {
     if (isVoting) return;
@@ -286,11 +288,16 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
     setIsVoting(true);
 
     try {
-      await vote(poll.contractPollId, optionIndex);
+      await vote(poll.contractPollId, poll.id, optionIndex);
 
       localStorage.setItem(`voted_${poll.id}`, "true");
 
       setVoted(true);
+
+      refetchPolls();
+      refetchHistory();
+      
+
       setRefreshSignal((prev) => prev + 1);
     } catch (error) {
       console.error("Vote failed:", error);
@@ -332,9 +339,10 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
             />
             <Chip
               label={
-                !timeLeft
-                  ? "⏰ Ended"
-                  : `⏳ ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`
+                timeLeft
+                  ? `⏳ ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`
+                  :  "⏰ Ended"
+
               }
             />
             <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
@@ -395,7 +403,7 @@ function PollCard({ poll, vote, contract, timeLeft }: { poll: any; vote: any; co
           {!voted && timeLeft && poll.options?.length > 0 && (
             <VoteProgressBar
               contract={contract}
-              pollId={poll.id}
+              contractPollId={poll.id}
               options={poll.options}
               refreshSignal={refreshSignal}
             />
@@ -433,7 +441,7 @@ function ActivePollsSection({
   polls,
   vote,
   contract,
-  loading,
+  loading
 }: {
   polls: any[];
   vote: any;
@@ -593,7 +601,7 @@ function MyVotesSection({ voteHistory, wallet }: { voteHistory: any[]; wallet: s
                 </Typography>
               </Stack>
               <Typography variant="body1" sx={{ mb: 0.5, color: "#fff" }}>
-                <strong>Poll ID:</strong> {vote.pollId}
+                <strong>Poll Title:</strong> {vote.pollTitle}
               </Typography>
               <Typography variant="body1" sx={{ mb: 0.5, color: "#fff" }}>
                 <strong>Option:</strong> {vote.optionLabel || `Index ${vote.optionIndex}`}
@@ -629,7 +637,7 @@ function ResultsSection({ polls, contract, loading }: { polls: any[]; contract: 
           };
 
           for (const opt of poll.options) {
-            const count = await contract.voteCounts(poll.pollId, opt.index);
+            const count = await contract.voteCounts(poll.id, opt.index);
             pollResults.counts.push(Number(count));
             pollResults.total += Number(count);
           }
@@ -869,7 +877,7 @@ function WelcomeSection({ onConnect, isConnecting }: { onConnect: () => void; is
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const { wallet, contract, connectWallet, isConnecting, isCheckingWallet } = useWallet();
-  const { polls, loading } = usePollsApi();
+  const { polls, loading } = usePollsApi(contract);
   const { voteHistory } = useVoteHistory(wallet);
 
   const [activeTab, setActiveTab] = useState("active-polls");

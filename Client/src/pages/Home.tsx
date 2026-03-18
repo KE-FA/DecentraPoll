@@ -18,7 +18,7 @@ const features = [
         icon: "🔐",
         title: "Secure Voting",
         description:
-            "Students can completely vote securely. No one can trace votes back to individuals. Privacy is guaranteed by cryptographic zero-knowledge proofs.",
+            "Students can completely vote securely.Privacy is guaranteed by cryptographic zero-knowledge proofs.",
     },
     {
         icon: "👨‍💼",
