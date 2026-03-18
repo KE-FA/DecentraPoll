@@ -657,8 +657,8 @@ function ResultsSection({ loading }: { loading: boolean }) {
 
     loadResults();
 
-    // Autorefresh every 5s
-    interval = setInterval(loadResults, 5000);
+    // Autorefresh every 1s
+    interval = setInterval(loadResults, 1000);
 
     return () => clearInterval(interval);
   }, []);

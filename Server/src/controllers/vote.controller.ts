@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { contract } from "../services/blockchain.service";
+// import { contract } from "../services/blockchain.service";
 
 const client = new PrismaClient();
 
@@ -9,7 +9,7 @@ const client = new PrismaClient();
 export const recordVote = async (req: Request, res: Response) => {
   try {
     const userId = req.user.id;
-    const { pollId, optionIndex } = req.body;
+    const { pollId, optionIndex, txHash } = req.body;
 
     // Fetch poll with options
     const poll = await client.poll.findUnique({
@@ -38,7 +38,7 @@ export const recordVote = async (req: Request, res: Response) => {
     if (existing) return res.status(400).json({ error: "User already voted" });
 
     // Send vote to blockchain
-    const tx = await contract.vote(poll.contractPollId!, optionIndex);
+    // const tx = await contract.vote(poll.contractPollId!, optionIndex);
     // const receipt = await tx.wait();
     // Find correct option in DB
     const selectedOption = poll.options.find(opt => opt.index === optionIndex);
@@ -52,7 +52,7 @@ export const recordVote = async (req: Request, res: Response) => {
         userId,
         pollId,
         optionId: selectedOption.id,
-        txHash: tx.hash,
+        txHash,
       },
     });
 
