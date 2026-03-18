@@ -44,12 +44,19 @@ export const getPollResults = async (req: Request, res: Response) => {
   }
 };
 
-// In-memory cache with auto-clean
-type CacheEntry = { data: any; expiresAt: number };
-const cache: Record<string, CacheEntry> = {};
-const CACHE_TTL = 10_000; // 10 seconds
 
-// Clean expired cache entries
+// Cache Setup
+
+type CacheEntry = { data: any; expiresAt: number };
+
+const cache: Record<string, CacheEntry> = {};
+const inFlight: Partial<Record<string, Promise<any>>> = {}; //De duplication
+
+// TTLs
+const ACTIVE_TTL = 10_000;   // 10s
+const INACTIVE_TTL = 60_000; // 60s
+
+// Clean cache periodically (Not per request)
 function cleanCache() {
   const now = Date.now();
   for (const key in cache) {
@@ -59,82 +66,116 @@ function cleanCache() {
   }
 }
 
-// Fetch all poll results with concurrency limits and auto-clean cache
+// Run every 30 seconds
+setInterval(cleanCache, 30_000);
+
+// Get All Poll Results
 export const getAllPollResults = async (req: Request, res: Response) => {
   try {
-    // Clean expired cache entries
-    cleanCache();
+    const now = Date.now();
 
-    // Fetch all polls with options
+    // Pagination (default: 5 polls)
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    // Fetch only relevant polls
     const polls = await prisma.poll.findMany({
+      where: {
+        contractPollId: { not: null },
+      },
       include: { options: true },
       orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
     });
 
     // Concurrency limits
-    const pollLimit = pLimit(3); // Max 3 polls at a time
-    const optionLimit = pLimit(5); // Max 5 option calls at a time per poll
+    const pollLimit = pLimit(3);
+    const optionLimit = pLimit(5);
 
     const allResults = await Promise.all(
       polls.map((poll) =>
         pollLimit(async () => {
-          if (!poll.contractPollId) return null;
-
           const cacheKey = `poll-${poll.contractPollId}`;
-          const now = Date.now();
 
-          // Return cached results if valid
+          // Return cached if valid
           if (cache[cacheKey] && cache[cacheKey].expiresAt > now) {
             return cache[cacheKey].data;
           }
 
-          try {
-            // Fetch votes for options with concurrency limit
-            const results = await Promise.all(
-              poll.options.map((option) =>
-                optionLimit(async () => {
-                  const votes = await blockchainService.getVotes(
-                    poll.contractPollId!,
-                    option.index
-                  );
-                  return {
-                    optionId: option.id,
-                    optionLabel: option.label,
-                    optionIndex: option.index,
-                    voteCount: Number(votes),
-                  };
-                })
-              )
-            );
-
-            const totalVotes = results.reduce((sum, r) => sum + r.voteCount, 0);
-
-            const pollResult = {
-              pollId: poll.id,
-              title: poll.title,
-              description: poll.description,
-              status: poll.status,
-              deadline: poll.deadline,
-              results,
-              totalVotes,
-            };
-
-            // Cache the poll result
-            cache[cacheKey] = { data: pollResult, expiresAt: now + CACHE_TTL };
-
-            return pollResult;
-          } catch (err) {
-            console.error(`Failed for poll ${poll.id}`, err);
-            return null;
+          // Prevent duplicate requests (in-flight deduplication)
+          if (inFlight[cacheKey]) {
+            return inFlight[cacheKey];
           }
+
+          // Create new request
+          inFlight[cacheKey] = (async () => {
+            try {
+              const results = await Promise.all(
+                poll.options.map((option) =>
+                  optionLimit(async () => {
+                    const votes = await blockchainService.getVotes(
+                      poll.contractPollId!,
+                      option.index
+                    );
+
+                    return {
+                      optionId: option.id,
+                      optionLabel: option.label,
+                      optionIndex: option.index,
+                      voteCount: Number(votes),
+                    };
+                  })
+                )
+              );
+
+              const totalVotes = results.reduce(
+                (sum, r) => sum + r.voteCount,
+                0
+              );
+
+              const pollResult = {
+                pollId: poll.id,
+                title: poll.title,
+                description: poll.description,
+                status: poll.status,
+                deadline: poll.deadline,
+                results,
+                totalVotes,
+              };
+
+              // Smarter TTL
+              const isActive = poll.status === "ACTIVE";
+              const ttl = isActive ? ACTIVE_TTL : INACTIVE_TTL;
+
+              cache[cacheKey] = {
+                data: pollResult,
+                expiresAt: Date.now() + ttl,
+              };
+
+              return pollResult;
+            } catch (err) {
+              console.error(`Failed for poll ${poll.id}`, err);
+              return null;
+            } finally {
+              delete inFlight[cacheKey]; // cleanup
+            }
+          })();
+
+          return inFlight[cacheKey];
         })
       )
     );
 
-    // Filter out null/failed polls
     const filteredResults = allResults.filter(Boolean);
 
-    res.json(filteredResults);
+    // Response with pagination metadata
+    res.json({
+      data: filteredResults,
+      page,
+      limit,
+    });
   } catch (err) {
     console.error("Failed to fetch all poll results:", err);
     res.status(500).json({ error: "Failed to fetch all poll results" });

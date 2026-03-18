@@ -754,7 +754,7 @@ function ResultsSection({ loading }: { loading: boolean }) {
     const loadResults = async () => {
       try {
         const res = await axiosInstance.get("/api/polls/results");
-        setResults(res.data);
+        setResults(res.data.data);
       } catch (error) {
         console.error("Failed to load results:", error);
       }
@@ -958,7 +958,7 @@ function ResultsSection({ loading }: { loading: boolean }) {
           </Box>
         </>
 
-      )};
+      )}
 
     </Box>
   );
