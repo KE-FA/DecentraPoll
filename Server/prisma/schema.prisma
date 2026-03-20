@@ -14,7 +14,7 @@ model User {
   role          Role    @default(STUDENT)
   walletAddress String? @unique @db.VarChar(42)
 
-  walletVerified Boolean @default(false)
+  // walletVerified Boolean @default(false)
 
   createdAt   DateTime  @default(now())
   lastLoginAt DateTime?

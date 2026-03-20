@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { getNonce, verifyAndBindWallet } from "../api/walletApi";
 import { getContract } from "../web3/contract";
+import toast from "react-hot-toast";
 
 
 export function useWallet() {
@@ -16,34 +17,34 @@ export function useWallet() {
   const [isCheckingWallet, setIsCheckingWallet] = useState(true);
 
   useEffect(() => {
-  const restoreWallet = async () => {
-    try {
-      if (!(window as any).ethereum) return;
+    const restoreWallet = async () => {
+      try {
+        if (!(window as any).ethereum) return;
 
-      const provider = new ethers.BrowserProvider(
-        (window as any).ethereum
-      );
+        const provider = new ethers.BrowserProvider(
+          (window as any).ethereum
+        );
 
-      const accounts = await provider.send("eth_accounts", []);
+        const accounts = await provider.send("eth_accounts", []);
 
-      if (accounts.length > 0) {
-        const signerInstance = await provider.getSigner();
+        if (accounts.length > 0) {
+          const signerInstance = await provider.getSigner();
 
-        setWallet(accounts[0]);
-        setSigner(signerInstance);
-        setContract(getContract(signerInstance));
+          setWallet(accounts[0]);
+          setSigner(signerInstance);
+          setContract(getContract(signerInstance));
+        }
+      } catch (err) {
+        console.error("Restore wallet error:", err);
+      } finally {
+        setIsCheckingWallet(false);
       }
-    } catch (err) {
-      console.error("Restore wallet error:", err);
-    } finally {
-      setIsCheckingWallet(false);
-    }
-  };
+    };
 
-  restoreWallet();
-}, []);
+    restoreWallet();
+  }, []);
 
-  const connectWallet = async () => {
+  const connectAndBind = async () => {
     try {
       setIsConnecting(true);
 
@@ -63,36 +64,24 @@ export function useWallet() {
       setSigner(signerInstance);
       setContract(getContract(signerInstance));
 
-    } catch (error) {
-      console.error("Connect wallet error:", error);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const bindWallet = async () => {
-    try {
-      if (!signer || !wallet) {
-        alert("Connect wallet first");
-        return;
-      }
-
       setIsBinding(true);
 
-      const nonceRes = await getNonce();
-      const nonce = nonceRes.data.nonce;
+      // Bind immediately
+      const { data } = await getNonce();
+      const signature = await signerInstance.signMessage(data.nonce);
 
-      const signature = await signer.signMessage(nonce);
 
-      await verifyAndBindWallet(wallet, signature);
+      await verifyAndBindWallet(address, signature);
 
-      alert("Wallet Bound Successfully");
+
+      toast.success("Wallet connected & bound!");
 
     } catch (error) {
-      console.error("Bind wallet error:", error);
-      alert("Failed to bind wallet");
+      console.error(error);
     } finally {
       setIsBinding(false);
+
+      setIsConnecting(false);
     }
   };
 
@@ -100,8 +89,7 @@ export function useWallet() {
     wallet,
     contract,
     signer,
-    connectWallet,
-    bindWallet,
+    connectAndBind,
     isConnecting,
     isBinding,
     isCheckingWallet

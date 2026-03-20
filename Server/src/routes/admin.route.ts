@@ -2,13 +2,14 @@ import { Router } from "express";
 import {
   getAllUsers,
   addUser,
-  deleteUser,
+  resetUserWallet,
   updateUserInfo,
   getUserInfo
 } from "../controllers/admin.controller";
 // import { createPoll, approvePoll, rejectPoll } from "../controllers/admin.controller";
 
 import { verifyAdmin } from "../middlewares/verifyAdmin.middleware";
+import { verify } from "crypto";
 
 const router = Router();
 
@@ -33,7 +34,7 @@ router.post("/user", verifyAdmin, addUser);
 // Update user info 
 router.put("/user/:id", verifyAdmin, updateUserInfo);
 
-// Delete user 
-router.delete("/user/:id", verifyAdmin, deleteUser);
+// Reset (unlink) user wallet
+router.patch("/users/:id/reset-wallet",verifyAdmin, resetUserWallet);
 
 export default router;

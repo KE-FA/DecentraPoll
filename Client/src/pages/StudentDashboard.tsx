@@ -1059,7 +1059,7 @@ function WelcomeSection({ onConnect, isConnecting }: { onConnect: () => void; is
 // Student Dashboard
 export default function StudentDashboard() {
   const navigate = useNavigate();
-  const { wallet, contract, connectWallet, isConnecting, isCheckingWallet } = useWallet();
+  const { wallet, contract, connectAndBind, isConnecting, isCheckingWallet } = useWallet();
   const { polls, loading } = usePollsApi(contract);
   const { voteHistory } = useVoteHistory(wallet);
 
@@ -1174,7 +1174,7 @@ export default function StudentDashboard() {
     >
       <DashboardNavbar
         wallet={wallet}
-        onConnect={connectWallet}
+        onConnect={connectAndBind}
         isConnecting={isConnecting}
         onProfileClick={handleProfileClick}
         activeTab={activeTab}
@@ -1216,7 +1216,7 @@ export default function StudentDashboard() {
       <Container maxWidth="xl" sx={{ py: 6 }}>
         {/* Show welcome section if wallet not connected */}
         {!wallet ? (
-          <WelcomeSection onConnect={connectWallet} isConnecting={isConnecting} />
+          <WelcomeSection onConnect={connectAndBind} isConnecting={isConnecting} />
         ) : (
           <>
             {/* Welcome Message */}

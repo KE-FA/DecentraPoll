@@ -1,10 +1,8 @@
-import axios from "axios";
-
-const API = "http://localhost:4000/api/wallet";
+import axiosInstance from "./axiosInstance";
 
 // Get nonce from backend
 export const getNonce = async () => {
-  return await axios.get(`${API}/nonce`, {
+  return await axiosInstance.get(`/api/wallet/nonce`, {
     withCredentials: true,
   });
 };
@@ -14,8 +12,8 @@ export const verifyAndBindWallet = async (
   address: string,
   signature: string
 ) => {
-  return await axios.post(
-    `${API}/verify`,
+  return await axiosInstance.post(
+    `/api/wallet/verify`,
     { address, signature },
     { withCredentials: true }
   );

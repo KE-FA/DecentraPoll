@@ -360,21 +360,25 @@ export const addUser = async (req: Request, res: Response) => {
   }
 };
 
-// Delete User
-export const deleteUser = async (req: Request, res: Response) => {
+// Reset Wallet
+export const resetUserWallet = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = Number(id);
 
-    // Delete all login logs for this user first
+    // Clear Login Sessions
     await client.login.deleteMany({ where: { userId } });
 
-    // Then delete the user
-    await client.user.delete({ where: { id: userId } });
-
-    res.status(200).json({ message: "User deleted successfully" });
+    // Reser Users Wallet
+    await client.user.update({
+      where: { id: userId },
+      data: {
+        walletAddress: null,
+      },
+    });
+    res.status(200).json({ message: "Wallet removed. User can bind a new wallet." });
   } catch (e: any) {
-    console.error("❌ deleteUser error:", e);
-    res.status(500).json({ message: "Failed to delete user", error: e.message });
+    console.error("❌ resetUserWallet error:", e);
+    res.status(500).json({ message: "Failed to reset wallet", error: e.message });
   }
 };

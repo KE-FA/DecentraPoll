@@ -68,7 +68,7 @@ const Login: React.FC = () => {
     },
     onError: (err) => {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Login failed");
+        toast.error(err.response?.data?.message || "Login Failed", { position: "top-center" });
       } else {
         setError("Something went wrong");
       }
