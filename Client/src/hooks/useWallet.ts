@@ -74,7 +74,9 @@ export function useWallet() {
       await verifyAndBindWallet(address, signature);
 
 
-      toast.success("Wallet connected & bound!");
+      toast.success("Wallet connected & bound successfully",{
+        position: "top-center",
+      });
 
     } catch (error) {
       console.error(error);
