@@ -87,7 +87,7 @@ const textFieldSx = {
 };
 
 function AdminProfile() {
-    const { user, logoutUser } = useUser();
+    const { user } = useUser();
     const navigate = useNavigate();
 
     const [currentPassword, setCurrentPassword] = useState("");
@@ -136,6 +136,17 @@ function AdminProfile() {
         navigate("/login");
         return null;
     }
+
+    // Handle Logout
+    
+    const handleLogout = () => {
+
+    // Clear wallet in localStorage
+    localStorage.removeItem("wallet");
+
+    // Redirect to admin login page
+    navigate("/admin");
+  };
 
     return (
         <div
@@ -488,7 +499,7 @@ function AdminProfile() {
                             >
                                 <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                                     <Button
-                                        onClick={logoutUser}
+                                        onClick={handleLogout}
                                         variant="outlined"
                                         size="large"
                                         sx={{

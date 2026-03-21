@@ -269,7 +269,7 @@ const StatCard = ({
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
-    const { user, logoutUser } = useUser();
+    const { user } = useUser();
     const [tab, setTab] = useState(0);
     const [chartsReady, setChartsReady] = useState(false);
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -433,7 +433,18 @@ export default function AdminDashboard() {
         fetchPolls();
     };
 
-    // ANALYTICS CALCULATIONS 
+    // Handle Logout
+    
+    const handleLogout = () => {
+
+    // Clear wallet in localStorage
+    localStorage.removeItem("wallet");
+
+    // Redirect to admin login page
+    navigate("/admin");
+  };
+
+    // Analytics Calculations
 
     const totalUsers = users.length;
     const totalPolls = polls.length;
@@ -572,7 +583,7 @@ export default function AdminDashboard() {
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Button
-                                    onClick={() => navigate("/profile")}
+                                    onClick={() => navigate("/AdminProfile")}
                                     variant="outlined"
                                     startIcon={<Person />}
                                     sx={{
@@ -596,7 +607,7 @@ export default function AdminDashboard() {
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Button
-                                    onClick={logoutUser}
+                                    onClick={handleLogout}
                                     variant="outlined"
                                     startIcon={<Logout />}
                                     sx={{

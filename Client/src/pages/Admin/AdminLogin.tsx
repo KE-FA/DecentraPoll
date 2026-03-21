@@ -166,7 +166,7 @@ const AdminLogin: React.FC = () => {
               </Typography>
             </motion.div>
             <Typography sx={{ opacity: 0.7, fontSize: "1.1rem" }}>
-              👤 Admin Login Portal
+               🛠 Admin Login Portal
             </Typography>
           </Box>
 
