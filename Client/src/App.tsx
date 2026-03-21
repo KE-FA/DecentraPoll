@@ -4,6 +4,8 @@ import Login from "./pages/Student/Login";
 import "./App.css"
 import StudentDashboard from "./pages/Student/StudentDashboard";
 import Profile from "../src/pages/Student/Profile";
+import AdminLogin from "./pages/Admin/AdminLogin";
+// import AdminProfile from "./pages/Admin/AdminProfile";
 // import AdminDashboard from "../src/pages/AdminDashboard";
 import Protected from "./components/Protected";
 // import { Toaster } from "react-hot-toast";
@@ -40,12 +42,20 @@ function App() {
         />
 
         {/* Admin-only route */}
-        {/* <Route path="/admin" element={<AdminLogin />} /> */}
-        {/* <Route
-              path="/admin"
+        <Route path="/admin" element={<AdminLogin />} /> 
+         {/* <Route
+              path="/adminDashboard"
               element={
                 <Protected requireRole="ADMIN">
                   <AdminDashboard />
+                </Protected>
+              }
+            /> */}
+            {/* <Route
+              path="/adminProfile"
+              element={
+                <Protected requireRole="ADMIN">
+                  <AdminProfile />
                 </Protected>
               }
             /> */}
