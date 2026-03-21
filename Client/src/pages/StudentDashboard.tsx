@@ -1059,7 +1059,7 @@ function WelcomeSection({ onConnect, isConnecting }: { onConnect: () => void; is
 // Student Dashboard
 export default function StudentDashboard() {
   const navigate = useNavigate();
-  const { wallet, contract, connectAndBind, isConnecting, isCheckingWallet } = useWallet();
+  const { wallet, contract, connectAndBind, isConnecting, isCheckingWallet, isBound } = useWallet();
   const { polls, loading } = usePollsApi(contract);
   const { voteHistory } = useVoteHistory(wallet);
 
@@ -1215,7 +1215,7 @@ export default function StudentDashboard() {
 
       <Container maxWidth="xl" sx={{ py: 6 }}>
         {/* Show welcome section if wallet not connected */}
-        {!wallet ? (
+        {!isBound ? (
           <WelcomeSection onConnect={connectAndBind} isConnecting={isConnecting} />
         ) : (
           <>
@@ -1234,15 +1234,17 @@ export default function StudentDashboard() {
             </motion.div>
 
             {/* Connected wallet indicator */}
-            <Chip
-              label={`✅ Wallet Connected: ${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)}`}
-              sx={{
-                background: "rgba(20, 184, 166, 0.2)",
-                color: "#14b8a6",
-                fontWeight: 600,
-                mb: 1.5,
-              }}
-            />
+            {wallet && (
+              <Chip
+                label={`✅ Wallet Connected: ${wallet.substring(0, 6)}...${wallet.substring(wallet.length - 4)}`}
+                sx={{
+                  background: "rgba(20, 184, 166, 0.2)",
+                  color: "#14b8a6",
+                  fontWeight: 600,
+                  mb: 1.5,
+                }}
+              />
+            )}
 
             {/* Section Content */}
             <Box sx={{ mt: 5 }}>

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   generateNonce,
+  getWalletStatus,
   verifyAndBindWallet
 } from "../controllers/wallet.controller";
 
@@ -9,6 +10,9 @@ import { verifyAdmin } from "../middlewares/verifyAdmin.middleware";
 
 const router = Router();
 
+// Get wallet binding status for logged-in student
+
+router.get("/status", verifyUser, getWalletStatus);
 
 // Generate a unique nonce for the logged-in student
  

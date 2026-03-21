@@ -1,5 +1,10 @@
 import axiosInstance from "./axiosInstance";
 
+// Get wallet binding status for logged-in student
+export const getWalletStatus = async () => {
+  return axiosInstance.get("/api/wallet/status"); 
+};
+
 // Get nonce from backend
 export const getNonce = async () => {
   return await axiosInstance.get(`/api/wallet/nonce`, {
