@@ -5,6 +5,8 @@ import { persist } from "zustand/middleware";
 // Export User interface
 export interface User {
   id: string;
+  firstName: string;
+  lastName: string;
   regNo: string;
   role: string;
   walletAddress: string;

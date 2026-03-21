@@ -9,7 +9,7 @@ import {
 // import { createPoll, approvePoll, rejectPoll } from "../controllers/admin.controller";
 
 import { verifyAdmin } from "../middlewares/verifyAdmin.middleware";
-import { verify } from "crypto";
+// import { verify } from "crypto";
 
 const router = Router();
 

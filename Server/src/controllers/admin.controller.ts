@@ -248,6 +248,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
     const users = await client.user.findMany({
       select: {
         id: true,
+        firstName: true,
+        lastName: true,
         regNo: true,
         role: true,
         lastLoginAt: true,
@@ -265,10 +267,12 @@ export const getAllUsers = async (req: Request, res: Response) => {
 export const updateUserInfo = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { regNo, password, role } = req.body;
+    const { firstName, lastName, regNo, password, role } = req.body;
 
     // Build update data dynamically
     const updateData: any = {};
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
     if (regNo) updateData.regNo = regNo;
     if (role) updateData.role = role;
     if (password) {
@@ -281,6 +285,8 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       data: updateData,
       select: {
         id: true,
+        firstName: true,
+        lastName: true,
         regNo: true,
         role: true,
         createdAt: true,
@@ -305,6 +311,8 @@ export const getUserInfo = async (req: Request, res: Response) => {
     const user = await client.user.findUnique({
       where: { id: userId },
       select: {
+        firstName: true,
+        lastName: true,
         regNo: true,
         role: true,
 
@@ -325,12 +333,12 @@ export const getUserInfo = async (req: Request, res: Response) => {
 // Add new user
 export const addUser = async (req: Request, res: Response) => {
   try {
-    const { regNo, password, role } = req.body;
+    const { firstName, lastName, regNo, password, role } = req.body;
 
-    if (!regNo || !password || !role)
+    if (!firstName?.trim() || !lastName?.trim() || !regNo?.trim() || !password || !role)
       return res.status(400).json({ message: "All fields required" });
 
-    // Check if username already exists
+    // Check if registration number already exists
     const existingUser = await client.user.findUnique({ where: { regNo } });
     if (existingUser) {
       return res.status(400).json({ message: "Registration Number already taken" });
@@ -340,12 +348,16 @@ export const addUser = async (req: Request, res: Response) => {
 
     const newUser = await client.user.create({
       data: {
+        firstName,
+        lastName,
         regNo,
         password: hashedPassword,
         role,
       },
       select: {
         id: true,
+        firstName: true,
+        lastName: true,
         regNo: true,
         role: true,
         createdAt: true,

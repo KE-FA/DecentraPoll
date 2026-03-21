@@ -8,10 +8,12 @@ const client = new PrismaClient();
 // Register User
 export const registerUser = async (req: Request, res: Response) => {
   try {
-    const { regNo, role, password} = req.body;
+    const { firstName, lastName, regNo, role, password} = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     await client.user.create({
       data: {
+        firstName,
+        lastName,
         regNo,
         role,
         password: hashedPassword,
@@ -65,7 +67,7 @@ export const loginUser = async (req: Request, res: Response) => {
       data: { lastLoginAt: new Date() },
     });
 
-    // Return user info + new IP flag
+    // Return user info 
     res
       .cookie("authToken", token, {
         httpOnly: true,
@@ -76,6 +78,8 @@ export const loginUser = async (req: Request, res: Response) => {
       .json({
         message: "Login successful",
         id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
         regNo: user.regNo,
         role: user.role.toUpperCase(),
         

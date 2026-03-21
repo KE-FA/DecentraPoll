@@ -3,6 +3,7 @@ import Home from "../src/pages/Home"
 import Login from "../src/pages/Login";
 import "./App.css"
 import StudentDashboard from "./pages/StudentDashboard";
+import Profile from "./pages/Profile";
 // import AdminDashboard from "../src/pages/AdminDashboard";
 import Protected from "./components/Protected";
 // import { Toaster } from "react-hot-toast";
@@ -25,6 +26,15 @@ function App() {
           element={
             <Protected requireRole="STUDENT">
               <StudentDashboard />
+            </Protected>
+          }
+        />
+        
+        <Route
+          path="/profile"
+          element={
+            <Protected>
+              <Profile />
             </Protected>
           }
         />

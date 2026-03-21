@@ -14,7 +14,8 @@ model User {
   role          Role    @default(STUDENT)
   walletAddress String? @unique @db.VarChar(42)
 
-  // walletVerified Boolean @default(false)
+  firstName String
+  lastName  String
 
   createdAt   DateTime  @default(now())
   lastLoginAt DateTime?
@@ -109,4 +110,3 @@ model VoteHistory {
   @@index([userId])
   @@map("vote_history")
 }
-
