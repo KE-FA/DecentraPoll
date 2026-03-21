@@ -11,9 +11,9 @@ import {
   Stack,
   Alert,
 } from "@mui/material";
-import axiosInstance from "../api/axiosInstance";
+import axiosInstance from "../../api/axiosInstance";
 import { useMutation } from "@tanstack/react-query";
-import useUser from "../store/userStore";
+import useUser from "../../store/userStore";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";

@@ -24,11 +24,11 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useWallet } from "../hooks/useWallet";
-import { useVote } from "../hooks/useVote";
-import { usePollsApi } from "../hooks/usePollsApi";
-import { useVoteHistory } from "../hooks/useVoteHistory";
-import axiosInstance from "../api/axiosInstance";
+import { useWallet } from "../../hooks/useWallet";
+import { useVote } from "../../hooks/useVote";
+import { usePollsApi } from "../../hooks/usePollsApi";
+import { useVoteHistory } from "../../hooks/useVoteHistory";
+import axiosInstance from "../../api/axiosInstance";
 
 // Navbar Component with integrated wallet connection
 const DashboardNavbar = ({

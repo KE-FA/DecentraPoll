@@ -12,10 +12,10 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import axiosInstance from "../api/axiosInstance";
+import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import useUser from "../store/userStore";
+import useUser from "../../store/userStore";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface PasswordDetails {

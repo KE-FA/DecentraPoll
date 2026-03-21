@@ -1,9 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "../src/pages/Home"
-import Login from "../src/pages/Login";
+import Login from "./pages/Student/Login";
 import "./App.css"
-import StudentDashboard from "./pages/StudentDashboard";
-import Profile from "./pages/Profile";
+import StudentDashboard from "./pages/Student/StudentDashboard";
+import Profile from "../src/pages/Student/Profile";
 // import AdminDashboard from "../src/pages/AdminDashboard";
 import Protected from "./components/Protected";
 // import { Toaster } from "react-hot-toast";
