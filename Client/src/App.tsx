@@ -6,7 +6,7 @@ import StudentDashboard from "./pages/Student/StudentDashboard";
 import Profile from "../src/pages/Student/Profile";
 import AdminLogin from "./pages/Admin/AdminLogin";
 import AdminProfile from "./pages/Admin/AdminProfile";
-// import AdminDashboard from "../src/pages/AdminDashboard";
+import AdminDashboard from "../src/pages/Admin/AdminDashboard";
 import Protected from "./components/Protected";
 // import { Toaster } from "react-hot-toast";
 
@@ -43,14 +43,14 @@ function App() {
 
         {/* Admin-only route */}
         <Route path="/admin" element={<AdminLogin />} /> 
-         {/* <Route
+         <Route
               path="/adminDashboard"
               element={
                 <Protected requireRole="ADMIN">
                   <AdminDashboard />
                 </Protected>
               }
-            /> */}
+            />
             <Route
               path="/adminProfile"
               element={
