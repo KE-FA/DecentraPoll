@@ -5,7 +5,7 @@ import "./App.css"
 import StudentDashboard from "./pages/Student/StudentDashboard";
 import Profile from "../src/pages/Student/Profile";
 import AdminLogin from "./pages/Admin/AdminLogin";
-// import AdminProfile from "./pages/Admin/AdminProfile";
+import AdminProfile from "./pages/Admin/AdminProfile";
 // import AdminDashboard from "../src/pages/AdminDashboard";
 import Protected from "./components/Protected";
 // import { Toaster } from "react-hot-toast";
@@ -51,14 +51,14 @@ function App() {
                 </Protected>
               }
             /> */}
-            {/* <Route
+            <Route
               path="/adminProfile"
               element={
                 <Protected requireRole="ADMIN">
                   <AdminProfile />
                 </Protected>
               }
-            /> */}
+            />
       </Routes>
 
     </>
