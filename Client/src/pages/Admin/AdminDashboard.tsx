@@ -345,10 +345,11 @@ export default function AdminDashboard() {
                 status: p.status,
                 deadline: p.deadline,
                 results: p.results,
-                totalVotes: p.totalVotes || 0,
+                totalVotes: p.totalVotes ,
             }));
 
             setPolls(normalizedPolls);
+            fetchPolls();
         } catch (e) {
             toast.error("Failed to load polls");
             setPolls([]);
@@ -370,7 +371,9 @@ export default function AdminDashboard() {
             return;
         }
         await axiosInstance.post("/api/admin/user", { firstName, lastName, regNo, password, role });
-        toast.success("User created successfully");
+        toast.success("User created successfully",{
+            position: "top-center"
+        });
         setRegNo("");
         setFirstName("");
         setLastName("");
@@ -380,7 +383,9 @@ export default function AdminDashboard() {
 
     const handleResetWalletUser = async (id: number) => {
         await axiosInstance.patch(`/api/admin/users/${id}/reset-wallet`);
-        toast.success("Wallet reset successfully");
+        toast.success("Wallet reset successfully",{
+            position: "top-center"
+        });
         fetchUsers();
     };
 
@@ -392,7 +397,9 @@ export default function AdminDashboard() {
             lastName: editingUser.lastName,
             role: editingUser.role,
         });
-        toast.success("User updated successfully");
+        toast.success("User updated successfully",{
+            position: "top-center"
+        });
         setEditingUser(null);
         fetchUsers();
     };
@@ -414,7 +421,9 @@ export default function AdminDashboard() {
             options: options.split(",").map((o) => o.trim()),
             duration,
         });
-        toast.success("Poll created successfully");
+        toast.success("Poll created successfully",{
+            position: "top-center"
+        });
         setTitle("");
         setDescription("");
         setOptions("");
@@ -423,13 +432,17 @@ export default function AdminDashboard() {
 
     const handleApprove = async (id: number) => {
         await axiosInstance.post(`/api/polls/${id}/approve`);
-        toast.success("Poll approved");
+        toast.success("Poll approved",{
+            position: "top-center"
+        });
         fetchPolls();
     };
 
     const handleReject = async (id: number) => {
         await axiosInstance.post(`/api/polls/${id}/reject`);
-        toast.success("Poll rejected");
+        toast.success("Poll rejected", {
+            position: "top-center"
+        });
         fetchPolls();
     };
 
