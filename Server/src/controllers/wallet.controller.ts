@@ -97,7 +97,7 @@ export const verifyAndBindWallet = async (req: Request, res: Response) => {
     }
 
     // Prevent admin wallet from being used by students
-    if (recoveredAddress === ADMIN_WALLET_ADDRESS) {
+    if (recoveredAddress === ADMIN_WALLET_ADDRESS && user?.role === "STUDENT") {
       return res.status(403).json({ message: "Admin wallet cannot be linked to student" });
     }
 

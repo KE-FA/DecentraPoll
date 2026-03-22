@@ -85,8 +85,8 @@ const AnimatedOrbs = () => (
                     height: 260 + i * 50,
                     borderRadius: "50%",
                     background: `radial-gradient(circle, ${i % 2 === 0
-                            ? "rgba(99,102,241,0.2)"
-                            : "rgba(20,184,166,0.2)"
+                        ? "rgba(99,102,241,0.2)"
+                        : "rgba(20,184,166,0.2)"
                         }, transparent 70%)`,
                     top: `${(i * 17) % 100}%`,
                     left: `${(i * 23) % 100}%`,
@@ -289,6 +289,23 @@ export default function AdminDashboard() {
     const [description, setDescription] = useState("");
     const [options, setOptions] = useState("");
     const [duration, setDuration] = useState(86400);
+    const [timeLeftMap, setTimeLeftMap] = useState<Record<string, ReturnType<typeof getTimeLeft>>>({});
+
+    // Helper to calculate time left
+    function getTimeLeft(deadline: string) {
+        const now = new Date().getTime();
+        const end = new Date(deadline).getTime();
+        const diff = end - now;
+
+        if (diff <= 0) return null; // poll ended
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        return { hours, minutes, seconds };
+    }
+
 
     /* ADMIN CHECK */
     if (!user || user.role !== "ADMIN") {
@@ -302,16 +319,22 @@ export default function AdminDashboard() {
             if (!(window as any).ethereum) {
                 toast.error(
                     "MetaMask is not installed. Please install MetaMask to connect wallet."
-                );
+                    , {
+                        position: "top-center",
+                    });
                 return;
             }
             const accounts = await (window as any).ethereum.request({
                 method: "eth_requestAccounts",
             });
             setWalletAddress(accounts[0]);
-            toast.success("Wallet connected successfully");
+            toast.success("Wallet connected successfully", {
+                position: "top-center",
+            });
         } catch (e: any) {
-            toast.error(e.message || "Failed to connect wallet");
+            toast.error(e.message || "Failed to connect wallet", {
+                position: "top-center",
+            });
         }
     };
 
@@ -326,7 +349,9 @@ export default function AdminDashboard() {
                     : res.data.users || res.data.data || []
             );
         } catch (e) {
-            toast.error("Failed to load users");
+            toast.error("Failed to load users", {
+                position: "top-center",
+            });
             setUsers([]);
         }
     };
@@ -345,16 +370,25 @@ export default function AdminDashboard() {
                 status: p.status,
                 deadline: p.deadline,
                 results: p.results,
-                totalVotes: p.totalVotes ,
+                totalVotes: p.totalVotes || 0,
             }));
 
             setPolls(normalizedPolls);
-            fetchPolls();
+
+            // Initialize timeLeft map
+            const initialTimeLeft: Record<string, ReturnType<typeof getTimeLeft>> = {};
+            normalizedPolls.forEach((p) => {
+                initialTimeLeft[p.id] = getTimeLeft(p.deadline);
+            });
+            setTimeLeftMap(initialTimeLeft);
         } catch (e) {
-            toast.error("Failed to load polls");
+            toast.error("Failed to load polls", {
+                position: "top-center",
+            });
             setPolls([]);
         }
     };
+
 
     useEffect(() => {
         fetchUsers();
@@ -363,16 +397,33 @@ export default function AdminDashboard() {
         return () => clearTimeout(timer);
     }, []);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTimeLeftMap((_prev) => {
+                const updated: Record<string, ReturnType<typeof getTimeLeft>> = {};
+                polls.forEach((p) => {
+                    updated[p.id] = getTimeLeft(p.deadline);
+                });
+                return updated;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [polls]);
+
+
     // USER MANAGEMENT
 
     const handleCreateUser = async () => {
         if (!firstName || !lastName || !regNo || !password) {
-            toast.error("Please fill all fields");
+            toast.error("Please fill all fields", {
+                position: "top-center",
+            });
             return;
         }
         await axiosInstance.post("/api/admin/user", { firstName, lastName, regNo, password, role });
-        toast.success("User created successfully",{
-            position: "top-center"
+        toast.success("User created successfully", {
+            position: "top-center",
         });
         setRegNo("");
         setFirstName("");
@@ -383,8 +434,8 @@ export default function AdminDashboard() {
 
     const handleResetWalletUser = async (id: number) => {
         await axiosInstance.patch(`/api/admin/users/${id}/reset-wallet`);
-        toast.success("Wallet reset successfully",{
-            position: "top-center"
+        toast.success("Wallet reset successfully", {
+            position: "top-center",
         });
         fetchUsers();
     };
@@ -397,8 +448,8 @@ export default function AdminDashboard() {
             lastName: editingUser.lastName,
             role: editingUser.role,
         });
-        toast.success("User updated successfully",{
-            position: "top-center"
+        toast.success("User updated successfully", {
+            position: "top-center",
         });
         setEditingUser(null);
         fetchUsers();
@@ -412,7 +463,9 @@ export default function AdminDashboard() {
 
     const handleCreatePoll = async () => {
         if (!title || !options) {
-            toast.error("Please fill all fields");
+            toast.error("Please fill all fields", {
+                position: "top-center",
+            });
             return;
         }
         await axiosInstance.post("/api/polls/create", {
@@ -421,8 +474,8 @@ export default function AdminDashboard() {
             options: options.split(",").map((o) => o.trim()),
             duration,
         });
-        toast.success("Poll created successfully",{
-            position: "top-center"
+        toast.success("Poll created successfully", {
+            position: "top-center",
         });
         setTitle("");
         setDescription("");
@@ -430,32 +483,32 @@ export default function AdminDashboard() {
         fetchPolls();
     };
 
-    const handleApprove = async (id: number) => {
-        await axiosInstance.post(`/api/polls/${id}/approve`);
-        toast.success("Poll approved",{
-            position: "top-center"
-        });
-        fetchPolls();
-    };
+    // const handleApprove = async (id: number) => {
+    //     await axiosInstance.post(`/api/polls/${id}/approve`);
+    //     toast.success("Poll approved", {
+    //         position: "top-center",
+    //     });
+    //     fetchPolls();
+    // };
 
-    const handleReject = async (id: number) => {
-        await axiosInstance.post(`/api/polls/${id}/reject`);
-        toast.success("Poll rejected", {
-            position: "top-center"
-        });
-        fetchPolls();
-    };
+    // const handleReject = async (id: number) => {
+    //     await axiosInstance.post(`/api/polls/${id}/reject`);
+    //     toast.success("Poll rejected",{
+    //         position: "top-center",
+    //     });
+    //     fetchPolls();
+    // };
 
     // Handle Logout
-    
+
     const handleLogout = () => {
 
-    // Clear wallet in localStorage
-    localStorage.removeItem("wallet");
+        // Clear wallet in localStorage
+        localStorage.removeItem("wallet");
 
-    // Redirect to admin login page
-    navigate("/admin");
-  };
+        // Redirect to admin login page
+        navigate("/admin");
+    };
 
     // Analytics Calculations
 
@@ -667,9 +720,9 @@ export default function AdminDashboard() {
                 </motion.div>
             </Container>
 
-            
-                {/* ANALYTICS TAB */}
-             
+
+            {/* ANALYTICS TAB */}
+
             {tab === 0 && (
                 <Container
                     maxWidth="xl"
@@ -1308,9 +1361,9 @@ export default function AdminDashboard() {
                 </Container>
             )}
 
-            
-                {/* POLL MANAGEMENT TAB */}
-            
+
+            {/* POLL MANAGEMENT TAB */}
+
             {tab === 1 && (
                 <Container
                     maxWidth="xl"
@@ -1495,7 +1548,7 @@ export default function AdminDashboard() {
                                                     fontWeight: 700,
                                                 }}
                                             >
-                                                Votes
+                                                Deadline
                                             </TableCell>
                                             <TableCell
                                                 sx={{
@@ -1503,8 +1556,16 @@ export default function AdminDashboard() {
                                                     fontWeight: 700,
                                                 }}
                                             >
-                                                Actions
+                                                Votes
                                             </TableCell>
+                                            {/* <TableCell
+                                                sx={{
+                                                    color: "#818cf8",
+                                                    fontWeight: 700,
+                                                }}
+                                            >
+                                                Actions
+                                            </TableCell> */}
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -1583,6 +1644,31 @@ export default function AdminDashboard() {
                                                             }}
                                                         />
                                                     </TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={
+                                                                timeLeftMap[poll.id]
+                                                                    ? `${timeLeftMap[poll.id]?.hours}h ${timeLeftMap[poll.id]?.minutes}m ${timeLeftMap[poll.id]?.seconds}s`
+                                                                    : "Ended"
+                                                            }
+                                                            size="small"
+                                                            sx={{
+                                                                background:
+                                                                    (poll.deadline ||
+                                                                        0) > 0
+                                                                        ? "rgba(20,184,166,0.15)"
+                                                                        : "rgba(255,255,255,0.05)",
+                                                                color:
+                                                                    (poll.deadline ||
+                                                                        0) > 0
+                                                                        ? "#14b8a6"
+                                                                        : "rgba(255,255,255,0.3)",
+                                                                fontWeight: 600,
+                                                                fontSize:
+                                                                    "0.78rem",
+                                                            }}
+                                                        />
+                                                    </TableCell>
                                                     <TableCell
                                                         sx={{
                                                             color: "rgba(255,255,255,0.6)",
@@ -1608,7 +1694,7 @@ export default function AdminDashboard() {
                                                             }}
                                                         />
                                                     </TableCell>
-                                                    <TableCell>
+                                                    {/* <TableCell>
                                                         <Box
                                                             sx={{
                                                                 display: "flex",
@@ -1649,7 +1735,7 @@ export default function AdminDashboard() {
                                                                     </>
                                                                 )}
                                                         </Box>
-                                                    </TableCell>
+                                                    </TableCell> */}
                                                 </TableRow>
                                             ))
                                         )}
@@ -1661,7 +1747,7 @@ export default function AdminDashboard() {
                 </Container>
             )}
 
-                {/* USER MANAGEMENT TAB  */}
+            {/* USER MANAGEMENT TAB  */}
             {tab === 2 && (
                 <Container
                     maxWidth="xl"
@@ -1919,8 +2005,8 @@ export default function AdminDashboard() {
                                             >
                                                 Role
                                             </TableCell>
-                                            
-                                            
+
+
                                             <TableCell
                                                 sx={{
                                                     color: "#818cf8",
@@ -2184,7 +2270,7 @@ export default function AdminDashboard() {
                                                         )}
                                                     </TableCell>
 
-                                                   
+
 
 
                                                     <TableCell>
