@@ -127,14 +127,14 @@ cd DecentraPoll
 #### Backend
 
 ```
-cd server
+cd Server
 npm install
 ```
 
 #### Frontend
 
 ```
-cd client
+cd Client
 npm install
 ```
 

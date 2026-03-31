@@ -29,6 +29,8 @@ import { useVote } from "../../hooks/useVote";
 import { usePollsApi } from "../../hooks/usePollsApi";
 import { useVoteHistory } from "../../hooks/useVoteHistory";
 import axiosInstance from "../../api/axiosInstance";
+import useUser from "../../store/userStore";
+
 
 // Navbar Component with integrated wallet connection
 const DashboardNavbar = ({
@@ -1062,6 +1064,8 @@ export default function StudentDashboard() {
   const { wallet, contract, connectAndBind, isConnecting, isCheckingWallet, isBound } = useWallet();
   const { polls, loading } = usePollsApi(contract);
   const { voteHistory } = useVoteHistory(wallet);
+  const { user } = useUser();
+  
 
   const [activeTab, setActiveTab] = useState("active-polls");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -1226,7 +1230,7 @@ export default function StudentDashboard() {
               transition={{ duration: 0.5 }}
             >
               <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
-                🎓 Welcome back, Student!
+                🎓 Welcome back, {(user as any)?.firstName || "Student"}!
               </Typography>
               <Typography variant="body1" sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
                 Manage your votes and track poll results
