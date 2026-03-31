@@ -1,73 +1,135 @@
-# React + TypeScript + Vite
+# Decentralized Student Opinion Collection System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 📌 Overview
 
-Currently, two official plugins are available:
+This project is a **hybrid decentralized student opinion (polling) system** that combines a **centralized backend** with a **blockchain network** to ensure transparency, security and immutability of votes.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The system allows students to securely submit opinions while ensuring:
 
-## React Compiler
+* No vote tampering
+* Transparent result verification
+* Controlled administrative governance
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🏗 System Architecture
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The system follows a **hybrid model**:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+* **Frontend** → User interaction (students & admin)
+* **Backend** → Authentication, control logic, blockchain interaction
+* **Database** → Stores user data and poll metadata
+* **Blockchain** → Stores votes immutably
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🚀 Features
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 👨‍🎓 Student
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+* Register / Login
+* Connect wallet
+* Browse available polls
+* Cast vote securely
+* View results
+* View vote history
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 👨‍💼 Admin
+
+* Create polls
+* Manage users & roles
+* View analytics
+* Monitor system activity
+
+---
+
+## 🔐 Security Features
+
+* JWT-based authentication
+* Wallet signature verification (nonce-based)
+* Role-Based Access Control (RBAC)
+* Immutable vote storage on blockchain
+* Secure backend-controlled transactions
+
+---
+
+## ⚙️ Technologies Used
+
+### 🖥 Frontend
+
+* React.js
+* Material UI (MUI)
+* Ethers.js (Wallet integration)
+
+### 🧠 Backend
+
+* Node.js
+* Express.js
+* JSON Web Tokens (JWT)
+* Prisma ORM
+
+### 🗄 Database
+
+* PostgreSQL
+
+### ⛓ Blockchain
+
+* Ethereum (Testnet/Mainnet)
+* Smart Contracts (Solidity & Foundry)
+
+### 🔗 Blockchain Infrastructure
+
+* Alchemy (Blockchain API & node provider)
+
+### 🛠 Development Tools
+
+* MetaMask (Wallet integration)
+* Postman (API testing)
+* Git & GitHub (Version control)
+
+---
+
+## 🔄 System Workflow
+
+### 1. Authentication
+
+1. User logs in
+2. Backend generates a nonce
+3. User signs nonce using wallet
+4. Backend verifies signature
+5. Wallet linked to user account
+
+---
+
+### 2. Voting Process
+
+1. Student selects a poll
+2. Backend checks eligibility
+3. Backend submits transaction to blockchain
+4. Smart contract records vote
+5. Transaction hash stored in database
+
+---
+
+### 3. Result Retrieval
+
+* Results fetched from blockchain
+* Displayed via frontend dashboard
+
+---
+
+## 📊 Smart Contract Functions
+
+* `createPoll()` → Create new poll
+* `vote()` → Submit vote
+* `getVotes()` → Fetch poll results
+
+---
+
+
+## 📈 Future Improvements
+
+* Multi-chain support
+* Mobile application
+
+
