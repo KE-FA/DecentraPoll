@@ -18,7 +18,6 @@ The system ensures:
 * **Backend (Node.js + Express)** → Authentication, control logic, blockchain interaction
 * **Database (PostgreSQL)** → Stores users, roles, metadata
 * **Blockchain (Ethereum)** → Stores votes immutably
-* **IPFS** → Stores poll descriptions & files (via Pinata)
 
 ---
 
