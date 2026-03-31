@@ -110,6 +110,33 @@ The system ensures:
 
 ---
 
+## 📸 Screenshots
+
+### 👨‍🎓 Student Dashboard
+
+![Student Dashboard](../DecentraPoll/Client/public/StudentDashboard.png)
+
+**Description:**
+
+* Displays available polls
+* Shows voting status
+* Allows students to cast votes and view results
+
+---
+
+### 👨‍💼 Admin Dashboard
+
+![Admin Dashboard](../DecentraPoll/Client/public/AdminDashboard.png)
+
+**Description:**
+
+* Create and manage polls
+* Create and manage users
+* View analytics and participation
+
+
+---
+
 
 ## 🛠 Installation & Setup Guide
 
