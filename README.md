@@ -114,7 +114,7 @@ The system ensures:
 
 ### 👨‍🎓 Student Dashboard
 
-![Student Dashboard](../DecentraPoll/Client/public/StudentDashboard.png)
+![Student Dashboard](./Images/StudentDashboard.png)
 
 **Description:**
 
@@ -126,7 +126,7 @@ The system ensures:
 
 ### 👨‍💼 Admin Dashboard
 
-![Admin Dashboard](../DecentraPoll/Client/public/AdminDashboard.png)
+![Admin Dashboard](./Images/AdminDashboard.png)
 
 **Description:**
 
